@@ -2,13 +2,13 @@
 
 User preference: GPT-6.1 Sol for demanding work and GPT-6 Luna for routine batches. The user changes the model in this chat and says **continue**. This is a saved work queue, not an automatic model router or permission to start the bot.
 
-**Active model: GPT-6.1 Sol (session-identified 2026-10-31).** Update this field only from explicit session metadata or user confirmation. A bare resume does not prove a model switch. Group related implementation and checks to reduce manual switches; always specify the next model and effort and ask before changing batches.
+**Active model: GPT-6 Luna, medium effort (user-confirmed 2026-10-31).** Update this field only from explicit session metadata or user confirmation. Group related implementation and checks to reduce manual switches; always specify the next model and effort and ask before changing batches.
 
 ## Current handoff
 
-**Status: S1 implementation complete; L2 ready for Luna/medium after the requested manual switch.**
+**Status: L2 complete; waiting for Sol6.1/high review.**
 
-Next batch: L2 below. Helper/Python remain stopped under the user's standing instruction. No game action or deployment is included.
+Next batch: S2 below. Helper/Python remain stopped under the user's standing instruction. No game action or deployment is included.
 
 ## Model allocation
 
@@ -66,7 +66,7 @@ Sol owns design, critical implementation, root-cause analysis and final behavior
 
 ## L2 — validation/reporting batch after S1
 
-Status: READY. Model: Luna, medium effort. Run this coherent validation/reporting batch, then ask for Sol6.1/high.
+Status: DONE on 2026-10-31. Model: Luna, medium effort. Evidence and hardware limitation recorded below; ask for Sol6.1/high.
 
 Packet (from repository root, using the existing private toolchain):
 
@@ -76,13 +76,15 @@ Packet (from repository root, using the existing private toolchain):
 4. If explicit serial f7c5e6fe is connected and the script's idle/root preflight passes, run `python3 tools/last-z-helper/validate_android_fixtures.py --serial f7c5e6fe`. Expected: 141 transaction and five owned-shell detach checks. This does not exercise live rotation navigation. Do not bypass preflight, clear STOP or start a controller if blocked; report the hardware-dependent check unavailable and continue documentation.
 5. Run `git diff --check`, record actual results and limitations in CURRENT_HANDOFF, update this queue and commit directly to main. Do not change source or weaken failing tests. Ask for Sol6.1/high for adapter/rotation review and release planning.
 
+Evidence: `runtime/helper-build/l2-validation.txt`; portable validation passed with 29 Boomer reconciliation, 141 transaction fault, 36 receipt-permission, 16 registry, all recovery/ownership suites and 35 Python tests. `git diff --check` passed. `adb devices` showed no connected device, so `validate_android_fixtures.py --serial f7c5e6fe` was not run; no phone action occurred.
+
 Run only prescribed build/test commands against the specified commit/diff. Collect concise results, distinguish simulated/JVM/Android/installed evidence, update the handoff and queue. Do not weaken tests or alter guards to make a failure pass. A new failure returns to Sol with command, first relevant error, affected files and preserved evidence.
 
 Android fixtures require the explicitly selected rooted device and idle controller state. Missing device/key/setup should block only dependent checks. No installation or live game action is included unless Sol has prepared an exact authorized procedure and the user's existing authorization covers it.
 
 ## S2 — review, enrollment and signed release
 
-Status: BLOCKED on S1/L2 evidence and original signing key for deployment.
+Status: READY for Sol review; deployment remains blocked on original signing key and installed-path evidence.
 
 Sol reviews results, implements/reviews explicit registry mapping, scheduling and the matching default-enabled UI choice while preserving false opt-outs. Complete same-signer candidate/installed Run/Preview/STOP checks within authorized selected-account bounds. Never generate a replacement key, uninstall to bypass signing, clear ambiguous history or turn protection Off to manufacture samples. Do not confuse source/fixture proof with installed-path completion.
 

@@ -1,5 +1,13 @@
 # Current handoff - start here
 
+## L2 checkpoint: portable validation complete; Android fixture unavailable, 2026-10-31
+
+Active model is GPT-6 Luna at medium effort, confirmed by the user. The grouped L2 packet ran against commit 02e9882. Portable validation passed: 29 Boomer reconciliation checks, 141 durable transaction checks, 36 receipt-permission checks, 16 registry checks, all recovery/ownership suites and 35 Python tests. `git diff --check` passed. The private log is runtime/helper-build/l2-validation.txt.
+
+`adb devices` returned no connected devices, so the prescribed `validate_android_fixtures.py --serial f7c5e6fe` check was not run. This is a hardware-dependent limitation only; no device action, controller start, STOP change, installation or live rotation navigation occurred. Bot/Python remain stopped and installed0.39 remains unchanged.
+
+L2 is complete. Next is a grouped Sol6.1/high review of the receipt adapter, production enrollment gates and release plan. Do not enroll Boomer, alter RotationPolicy/MaintenanceRegistry, sign, install or start the bot until that review and its release evidence are complete.
+
 ## S1 checkpoint: rotation receipt recovery adapter, 2026-10-31
 
 Active model is GPT-6.1 Sol, identified by explicit session metadata. User requests larger related batches to reduce manual switches; specify model/effort at every switch and pause for confirmation. The previously saved Luna state below is historical.
