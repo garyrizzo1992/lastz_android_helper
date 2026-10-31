@@ -5,18 +5,20 @@ final class BoomerNavigator {
  final MaintenanceContext c;BoomerNavigator(MaintenanceContext c){this.c=c;}
  void tap(String path)throws Exception{c.active();c.input.action(new JSONObject().put("action","ui-tap").put("path",path).put("boomerRoute",BoomerNavigationPolicy.route(path)));c.input.pause(350);}
  void center()throws Exception{try(GameMemory m=new GameMemory(c.controller.cache)){if(m.state.getInt("sceneId")!=1||m.state.getInt("modalWindowCount")!=1||!m.open("UIActivityCenterTable"))throw new IOException("Event Center alone required");}}
- void target()throws Exception{center();try(GameMemory m=new GameMemory(c.controller.cache)){long data=m.path(BoomerNavigationPolicy.EVENT+"groupItems/372337/tabItems/40005/data");if(!"40005".equals(GameMemory.string(data,"id"))||GameMemory.number(data,"type")!=21||!"Danger Lurks".equals(GameMemory.string(data,"name")))throw new IOException("Danger Lurks event is unavailable or changed");}}
+ String target()throws Exception{center();try(GameMemory m=new GameMemory(c.controller.cache)){return BoomerEventTarget.find(m);}}
+ String waitTarget()throws Exception{long until=System.currentTimeMillis()+5000;while(true){c.active();try{return target();}catch(IOException e){if(!(e.getMessage().equals("Danger Lurks event is unavailable")||e.getMessage().equals("Lua field absent: groupItems"))||System.currentTimeMillis()>=until)throw e;c.input.pause(200);}}}
  void open()throws Exception{
-  c.active();boolean dialog,center;try(GameMemory m=new GameMemory(c.controller.cache)){dialog=m.open("UIAllianceAutoJoinRally");center=m.open("UIActivityCenterTable");if(dialog){BoomerReader.identity(m);return;}if(!center&&(m.state.getInt("sceneId")!=1||m.state.getInt("modalWindowCount")!=0))throw new IOException("Clear base required for Auto Boomer navigation");}
+  c.active();boolean dialog,center,world;try(GameMemory m=new GameMemory(c.controller.cache)){dialog=m.open("UIAllianceAutoJoinRally");center=m.open("UIActivityCenterTable");world=m.state.getInt("sceneId")==2;if(dialog){BoomerReader.identity(m);return;}if(!center&&((m.state.getInt("sceneId")!=1&&m.state.getInt("sceneId")!=2)||m.state.getInt("modalWindowCount")!=0))throw new IOException("Clear base required for Auto Boomer navigation");}
+  if(!center&&world){tap(BoomerNavigationPolicy.HOME);long until=System.currentTimeMillis()+5000;while(true){c.active();try(GameMemory m=new GameMemory(c.controller.cache)){if(m.state.getInt("sceneId")==1&&m.state.getInt("modalWindowCount")==0)break;}if(System.currentTimeMillis()>=until)throw new IOException("Base not ready after recognized Home control");c.input.pause(150);}}
   if(!center){tap(BoomerNavigationPolicy.ENTRY);c.controller.waitWindow("UIActivityCenterTable",5000);}
-  target();boolean visible=false;
-  for(int swipe=0;swipe<=3;swipe++){
-   c.active();target();try{c.input.controlBounds(BoomerNavigationPolicy.CARD);visible=true;break;}catch(IOException e){if(!e.getMessage().contains("Control is outside visible screen")&&!e.getMessage().contains("Danger Lurks card is outside visible carousel"))throw e;}
-   if(swipe==3)break;
-   c.input.action(new JSONObject().put("action","ui-swipe").put("path",BoomerNavigationPolicy.EVENT+"tabScrollViewN").put("child","Viewport").put("direction","left").put("eventCarousel",true));c.input.pause(500);
+  String card=waitTarget();boolean visible=false;
+  for(int swipe=0;swipe<=24;swipe++){
+   c.active();if(!card.equals(target()))throw new IOException("Danger Lurks route changed during search");try{c.input.controlBounds(card);visible=true;break;}catch(IOException e){if(!e.getMessage().contains("Control is outside visible screen")&&!e.getMessage().contains("Danger Lurks card is outside visible carousel"))throw e;}
+   if(swipe==24)break;
+   c.input.action(new JSONObject().put("action","ui-swipe").put("path",BoomerNavigationPolicy.EVENT+"tabScrollViewN").put("child","Viewport").put("direction",swipe<8?"left":"right").put("eventCarousel",true).put("eventCardPath",card));c.input.pause(500);
   }
   if(!visible)throw new IOException("Danger Lurks card is not visible after bounded carousel search");
-  tap(BoomerNavigationPolicy.CARD);long until=System.currentTimeMillis()+5000;
+  tap(card);long until=System.currentTimeMillis()+5000;
   while(true){c.active();try(GameMemory m=new GameMemory(c.controller.cache)){if(m.open("UIActivityCenterTable")&&m.state.getInt("modalWindowCount")==1&&"40005".equals(GameMemory.string(m.path(BoomerNavigationPolicy.EVENT.substring(0,BoomerNavigationPolicy.EVENT.length()-1)),"lastActivityId")))break;}if(System.currentTimeMillis()>=until)throw new IOException("Danger Lurks panel not ready");c.input.pause(150);}
   until=System.currentTimeMillis()+10000;while(true){c.active();target();try{c.input.controlBounds(BoomerNavigationPolicy.AUTO);break;}catch(IOException e){if(!e.getMessage().contains("Exported control is hidden")&&!e.getMessage().contains("Exported control is disabled")&&!e.getMessage().contains("Control is outside visible screen"))throw e;if(System.currentTimeMillis()>=until)throw e;c.input.pause(200);}}
   tap(BoomerNavigationPolicy.AUTO);c.controller.waitWindow("UIAllianceAutoJoinRally",5000);try(GameMemory m=new GameMemory(c.controller.cache)){BoomerReader.identity(m);}

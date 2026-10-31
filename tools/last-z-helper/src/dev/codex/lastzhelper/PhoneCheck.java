@@ -19,8 +19,8 @@ public final class PhoneCheck {
     else if(args[1].equals("vip-read-controls")){if(!c.open("UIVip"))throw new IOException("VIP panel required");for(String name:new String[]{"get_btn","free_btn","get_btn_txt","free_btn_text","cur_day_des_text","box_btn_text","freeOpened","freeUnOpened","boxOpened","boxUnOpened","box_btn","free_text","free_des_text"})System.out.println(c.input.action(new JSONObject().put("action","ui-bounds").put("path","UIManagerInstance/windows/UIVip/View/"+name).put("stateOnly",true)));}
     else if(args[1].equals("boomer-read"))System.out.println(new BoomerReader(new MaintenanceContext(c)).read());
     else if(args[1].equals("event-carousel")){
-     String root="UIManagerInstance/windows/UIActivityCenterTable/View/";try(GameMemory m=new GameMemory(c.cache)){if(m.state.getInt("modalWindowCount")!=1||!m.open("UIActivityCenterTable"))throw new IOException("Event Center alone required");long tab=m.path(root+"groupItems/372337/tabItems/40005/data");if(!"Danger Lurks".equals(GameMemory.string(tab,"name"))||!"40005".equals(GameMemory.string(tab,"id"))||GameMemory.number(tab,"type")!=21)throw new IOException("Danger Lurks tab identity changed");}
-     System.out.println(c.input.action(new JSONObject().put("action","ui-swipe").put("path",root+"tabScrollViewN").put("child","Viewport").put("direction","left").put("eventCarousel",true)));c.input.pause(700);
+     String card;try(GameMemory m=new GameMemory(c.cache)){if(m.state.getInt("modalWindowCount")!=1||!m.open("UIActivityCenterTable"))throw new IOException("Event Center alone required");card=BoomerEventTarget.find(m);}
+     System.out.println(c.input.action(new JSONObject().put("action","ui-swipe").put("path",BoomerNavigationPolicy.EVENT+"tabScrollViewN").put("child","Viewport").put("direction","left").put("eventCarousel",true).put("eventCardPath",card)));c.input.pause(700);
     }
     else if(args[1].equals("ui-state"))System.out.println(c.input.action(new JSONObject().put("action","ui-bounds").put("path",args[2]).put("stateOnly",true)));
     else if(args[1].equals("chest-preview"))System.out.println(c.input.action(new JSONObject().put("action","chest-preview")));

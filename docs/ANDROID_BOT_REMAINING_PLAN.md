@@ -31,7 +31,7 @@ The previous 0.37/reboot-locked checkpoint has been superseded. Do not rebuild t
 | Alliance Help and Common/Rare Gifts | Existing production workers | Help credit-cap ambiguity; Rare Gift live receipt coverage |
 | Finished troop collection | Existing production worker | Validate all building families and partial results in rotation |
 | Own finished Wanted rewards | Existing production worker | Hidden/unloaded state remains deferred; test real available samples |
-| Auto Boomer / Danger Lurks Auto Team-Up | Source diagnostic with guarded navigation, activation journal and expiry reconciliation; not deployed | Live activation/repeat, STOP/account-change and installed-path proof; then registry/defaults |
+| Auto Boomer / Danger Lurks Auto Team-Up | Source diagnostic: live activation and already-active repeat verified; not deployed | Remaining interruption/reconciliation and installed-path proof; then registry/defaults |
 | Passive base resources and finished building acknowledgements | Inspection only | Exact free action and verified reward/completion |
 | Mail rewards | Inspection only; coverage/sample gaps | Complete relevant mailbox coverage and verified ordinary attachment claims |
 | Eight-hour chest | Quarantined unresolved attempt | Reconcile existing attempt before enabling claims |
