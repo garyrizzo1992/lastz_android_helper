@@ -6,9 +6,9 @@ User preference: GPT-6.1 Sol for demanding work and GPT-6 Luna for routine batch
 
 ## Current handoff
 
-**Status: Sol review fixed atomic recovery persistence; hardware/release gates remain pending. Keep Sol6.1/high.**
+**Status: Sol review and isolation coverage complete; L3 ready for Luna/medium after confirmation.**
 
-Next batch: S2 below. Helper/Python remain stopped under the user's standing instruction. No game action or deployment is included.
+Next batch: L3 below. Helper/Python remain stopped under the user's standing instruction. No game action or deployment is included. User requests continued independent work; stop only at requested model boundaries, grouping related work.
 
 ## Model allocation
 
@@ -89,5 +89,11 @@ Status: REVIEWED with atomic receipt/status fix; further integration evidence re
 Sol reviews results, implements/reviews explicit registry mapping, scheduling and the matching default-enabled UI choice while preserving false opt-outs. Complete same-signer candidate/installed Run/Preview/STOP checks within authorized selected-account bounds. Never generate a replacement key, uninstall to bypass signing, clear ambiguous history or turn protection Off to manufacture samples. Do not confuse source/fixture proof with installed-path completion.
 
 ## Remaining feature pattern
+
+### L3 — grouped fixture validation and checkpoint (READY)
+
+Select Luna/medium before starting. Use the private toolchain environment from L2. Run `python3 tools/last-z-helper/validate.py`; expected38Boomer reconciliation checks and all existing suites. Compile tests/jvm/BoomerEngineTests.java, tests/jvm/BoomerReconciliationTests.java and tests/android/RecoveryDetachFixture.java using the same javac classpath/source8/target8 as validate_android_fixtures.py, in an ignored fresh build directory; this checks the newly added Android fixture source without requiring phone access. Do not alter code for a failure; preserve the first relevant error for Sol.
+
+If f7c5e6fe is connected and the runner's preflight passes, run `python3 tools/last-z-helper/validate_android_fixtures.py --serial f7c5e6fe`. Expected141transaction,38receipt and5owned-shell detach checks. If absent/busy, report hardware evidence pending and continue the source/documentation batch. Never clear STOP or start gameplay. Update handoff and queue, commit directly to main, and ask for Sol6.1/high. Next Sol work should continue independent parity/recovery implementation while missing hardware/signing material blocks only dependent release work.
 
 Use Sol for behavior discovery/design and critical implementation for gathering/radar, training/healing, construction/research, donations/shop, Wanted dispatch/assists, own trucks, remaining collections and shields/reporting. Queue repetitive approved edits, prescribed test execution and factual reporting for Luna. Return new ambiguity, failed tests and risky behavior changes to Sol; review meaningful feature behavior with Sol before release.

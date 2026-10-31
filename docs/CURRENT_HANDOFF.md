@@ -1,5 +1,11 @@
 # Current handoff - start here
 
+## Continued Sol checkpoint: partial receipts and Android fixture packet, 2026-10-31
+
+User requests continued independent work and pauses only for model changes. Active model: Sol6.1. Extended BoomerReconciliationTests to38 passing JVM checks: exact partial proof is durably saved while an incomplete legacy attempt remains fenced, feature UNCERTAIN is preserved, another account's records remain unchanged, and repeated incomplete recovery performs no write. Android-compatible temporary roots now use the runner's supplied isolated directory. validate_android_fixtures.py includes this38-check receipt suite alongside141transaction and5owned-shell detach checks. Python syntax compilation and git diff --check pass. The runner itself has not run on Android since this change; no device is connected and no live behavior is claimed.
+
+Next grouped Luna/medium batch L3: validate the changed Android fixture compilation and portable suite, attempt hardware fixtures only if the explicit selected serial is connected and idle, record results, and prepare the next Sol work queue. Missing hardware blocks hardware evidence only. Production enrollment/release remains pending; bot/Python remain stopped. No fresh phone state or signing-key availability was established in this source-only batch.
+
 ## Sol review checkpoint: atomic receipt/status recovery, 2026-10-31
 
 Active model: GPT-6.1 Sol (session metadata). Review found a crash window between persisting a recovered Boomer operation and clearing the feature's previous UNCERTAIN result. Added MaintenanceStore.verifiedResult to persist the receipt and, when no other operation remains unresolved, feature outcome/actual expiry in one atomic replacement. BoomerReceiptRecovery uses this path. Store is package-private and extensible for injected save-failure tests; production persistence remains ShareLedger.atomic. Four added checks cover failed save/durable barrier, restart, one-save completion and recovered scheduling. Portable validation is recorded in runtime/helper-build/s2-review-validation.txt; the expected Boomer reconciliation total is now33. The initial test compile caught the store's final modifier; the fixture extension was corrected before rerunning validation.

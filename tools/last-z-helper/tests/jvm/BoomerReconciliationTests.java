@@ -30,7 +30,8 @@ public final class BoomerReconciliationTests {
   JSONObject disabled=clone(before);disabled.getJSONArray("options").getJSONObject(0).put("selected",false);changed=clone(after);changed.put("options",disabled.getJSONArray("options"));expect(!BoomerReconciliationPolicy.receipt(disabled,changed),"No selected joins is not activation success");
   expect(!BoomerReconciliationPolicy.receipt(before,clone(after).put("options",new JSONArray())),"Unloaded options cannot reconcile");
   String uid=before.getString("accountUid"),id=BoomerReceiptRecovery.ID;
-  java.io.File file=java.nio.file.Files.createTempDirectory("boomer-recovery-").resolve("state.json").toFile();
+  java.nio.file.Path root=args.length==0?java.nio.file.Files.createTempDirectory("boomer-recovery-"):java.nio.file.Files.createTempDirectory(java.nio.file.Paths.get(args[0]),"receipt-");
+  java.io.File file=root.resolve("state.json").toFile();
   MaintenanceStore store=new MaintenanceStore(file);String key=store.begin(uid,id,"initial","activate",now,before);
   final JSONObject receipt=after;
   BoomerReceiptRecovery.World world=new BoomerReceiptRecovery.World(){public void active(){}public long now(){return 1001000;}public JSONObject read(){return receipt;}};
@@ -45,7 +46,7 @@ public final class BoomerReconciliationTests {
   MaintenanceStore reloaded=new MaintenanceStore(file);expect(!reloaded.unresolved(uid,id)&&reloaded.operation(uid,key).getJSONObject("after").getBoolean("reconciledReadOnly"),"Durable receipt clears barrier");
   expect(reloaded.feature(uid,id).getLong("nextDueMs")==expiry,"Recovery retains actual expiry");
   disk=StateProbe.text(file.getPath());expect(BoomerReceiptRecovery.inspect(reloaded,uid,false,world)==0&&StateProbe.text(file.getPath()).equals(disk),"Repeated recovery performs no write");
-  java.io.File faultFile=java.nio.file.Files.createTempDirectory("boomer-recovery-fault-").resolve("state.json").toFile();FaultStore fault=new FaultStore(faultFile);
+  java.io.File faultFile=root.resolve("fault-state.json").toFile();FaultStore fault=new FaultStore(faultFile);
   fault.begin(uid,id,"initial","activate",now,before);fault.record(uid,id,MaintenanceResult.of(MaintenanceResult.Outcome.UNCERTAIN,"interrupted",0),now);
   disk=StateProbe.text(faultFile.getPath());fault.fail=true;rejected=false;
   try{BoomerReceiptRecovery.inspect(fault,uid,false,world);}catch(java.io.IOException expected){rejected=true;}
@@ -53,6 +54,22 @@ public final class BoomerReconciliationTests {
   fault=new FaultStore(faultFile);expect(fault.unresolved(uid,id),"Restart after save failure remains fenced");
   expect(BoomerReceiptRecovery.inspect(fault,uid,false,world)==1&&fault.saves==1,"Receipt and schedule use one atomic save");
   reloaded=new MaintenanceStore(faultFile);expect(!reloaded.unresolved(uid,id)&&reloaded.feature(uid,id).getString("lastOutcome").equals("NOTHING_TO_DO")&&reloaded.feature(uid,id).getLong("nextDueMs")==expiry,"Restart sees both receipt and recovered expiry together");
+  MaintenanceStore isolated=new MaintenanceStore(root.resolve("isolation.json").toFile());
+  String other="2059770776000064";JSONObject otherBefore=clone(before).put("accountUid",other);
+  isolated.begin(other,id,"initial","activate",now,otherBefore);String otherState=isolated.account(other).toString();
+  String first=isolated.begin(uid,id,"initial","activate",now,before);
+  // A legacy/imported ledger can contain multiple unresolved records even though
+  // current begin() forbids creating them. Preserve every unmatched barrier.
+  JSONObject legacy=clone(isolated.operation(uid,first));legacy.getJSONObject("before").remove("activationRequestedMs");
+  isolated.account(uid).getJSONObject("operations").put("legacy_incomplete",legacy);
+  isolated.record(uid,id,MaintenanceResult.of(MaintenanceResult.Outcome.UNCERTAIN,"two interrupted records",0),now);
+  expect(BoomerReceiptRecovery.inspect(isolated,uid,false,world)==1,"Exact partial receipt can be saved beside incomplete legacy record");
+  isolated=new MaintenanceStore(isolated.file);
+  expect(isolated.operation(uid,first).getString("status").equals("verified")&&isolated.unresolved(uid,id),"Partial recovery preserves remaining barrier durably");
+  expect(isolated.feature(uid,id).getString("lastOutcome").equals("UNCERTAIN"),"Partial proof cannot clear feature quarantine");
+  expect(isolated.account(other).toString().equals(otherState),"Other account receipt and choices unchanged");
+  disk=StateProbe.text(isolated.file.getPath());
+  expect(BoomerReceiptRecovery.inspect(isolated,uid,false,world)==0&&StateProbe.text(isolated.file.getPath()).equals(disk),"Incomplete legacy repeat cannot write or consume");
   System.out.println("Auto Boomer reconciliation: "+checks+" checks passed; no replay/input");
  }
 }

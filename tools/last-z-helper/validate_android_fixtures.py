@@ -44,7 +44,8 @@ def main():
     sdk = Path(os.environ.get("LASTZ_ANDROID_SDK", os.environ.get("ANDROID_HOME", str(Path.home() / "Library/Android/sdk"))))
     fixture_classes = BUILD / ("android-fixtures-" + uuid.uuid4().hex)
     fixture_classes.mkdir()
-    sources = [HERE / "tests/jvm/BoomerEngineTests.java", HERE / "tests/android/RecoveryDetachFixture.java"]
+    sources = [HERE / "tests/jvm/BoomerEngineTests.java", HERE / "tests/jvm/BoomerReconciliationTests.java",
+               HERE / "tests/android/RecoveryDetachFixture.java"]
     run(java_tool("javac"), "-encoding", "UTF-8", "-source", "8", "-target", "8",
         "-cp", os.pathsep.join(map(str, [classes, sdk / "platforms/android-35/android.jar"])),
         "-d", fixture_classes, *sources)
@@ -64,7 +65,7 @@ def main():
         run(*adb, "push", source, staging)
         root("mv " + staging + " " + remote + "/" + name + " && chmod 600 " + remote + "/" + name)
     results = []
-    for name in ("BoomerEngineTests", "RecoveryDetachFixture"):
+    for name in ("BoomerEngineTests", "BoomerReconciliationTests", "RecoveryDetachFixture"):
         result = root("CLASSPATH=" + remote + "/source.dex:" + remote + "/fixtures.dex app_process /system/bin dev.codex.lastzhelper." + name + " " + remote)
         print(result.strip(), flush=True)
         results.append({"fixture": name, "output": result.strip()})
