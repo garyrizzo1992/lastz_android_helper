@@ -7,6 +7,17 @@ public final class BoomerReconciliationTests {
   boolean fail;int saves;FaultStore(java.io.File file)throws Exception{super(file);}
   void save()throws Exception{saves++;if(fail)throw new java.io.IOException("Injected atomic save failure");super.save();}
  }
+ static final class Navigation implements BoomerReceiptRecovery.Navigation {
+  final JSONObject receipt;final String fault;boolean scoped,stopped;int opens,closes,leaves,reads;
+  Navigation(JSONObject receipt,String fault){this.receipt=receipt;this.fault=fault;}
+  public long now(){return 1001000;}
+  public void active()throws Exception{if(stopped)throw new InterruptedException("STOP");}
+  public void enter()throws Exception{if(fault.equals("overlap"))throw new java.io.IOException("Existing scope");scoped=true;}
+  public void leave(){scoped=false;leaves++;}
+  public void open()throws Exception{expect(scoped,"Navigation owns restricted scope");opens++;if(fault.equals("stop")){stopped=true;throw new InterruptedException("STOP opening");}if(fault.equals("open"))throw new java.io.IOException("Open failure");}
+  public JSONObject read()throws Exception{expect(scoped,"Receipt read owns restricted scope");reads++;if(fault.equals("read-close"))throw new java.io.IOException("Read failure");if(fault.equals("late-stop"))stopped=true;return receipt;}
+  public void close()throws Exception{expect(scoped,"Cleanup retains restricted scope");closes++;if(fault.equals("close")||fault.equals("read-close"))throw new java.io.IOException("Close failure");}
+ }
  public static void main(String[]args)throws Exception{
   long now=1000000,expiry=now+BoomerPolicy.DURATION;
   JSONArray options=new JSONArray().put(new JSONObject().put("type",1).put("selected",true)).put(new JSONObject().put("type",2).put("selected",false));
@@ -70,6 +81,20 @@ public final class BoomerReconciliationTests {
   expect(isolated.account(other).toString().equals(otherState),"Other account receipt and choices unchanged");
   disk=StateProbe.text(isolated.file.getPath());
   expect(BoomerReceiptRecovery.inspect(isolated,uid,false,world)==0&&StateProbe.text(isolated.file.getPath()).equals(disk),"Incomplete legacy repeat cannot write or consume");
+  for(String scenario:new String[]{"success","open","read-close","close","stop","late-stop","overlap"}){
+   MaintenanceStore ledger=new MaintenanceStore(root.resolve("navigation-"+scenario+".json").toFile());ledger.begin(uid,id,"initial","activate",now,before);
+   Navigation navigation=new Navigation(receipt,scenario);Exception failure=null;int result=-1;
+   try{result=BoomerReceiptRecovery.navigate(ledger,uid,false,navigation);}catch(Exception expected){failure=expected;}
+   expect(!navigation.scoped,"Scope restored after "+scenario);
+   if(scenario.equals("overlap")){expect(navigation.leaves==0&&navigation.opens==0,"Existing scope is never replaced or cleared");continue;}
+   expect(navigation.leaves==1,"Scope released exactly once: "+scenario);
+   if(scenario.equals("success"))expect(result==1&&navigation.closes==1,"Success only follows cleanup");
+   else expect(failure!=null,"Failure cannot report success: "+scenario);
+   if(scenario.equals("read-close"))expect(failure.getMessage().equals("Read failure")&&failure.getSuppressed().length==1,"Cleanup preserves original read failure and secondary evidence");
+   if(scenario.equals("stop")||scenario.equals("late-stop"))expect(failure instanceof InterruptedException&&navigation.closes==0,"STOP prevents cleanup input");
+   boolean persisted=scenario.equals("success")||scenario.equals("close")||scenario.equals("late-stop");
+   expect(new MaintenanceStore(ledger.file).unresolved(uid,id)!=persisted,"Only conclusive proof survives interruption: "+scenario);
+  }
   System.out.println("Auto Boomer reconciliation: "+checks+" checks passed; no replay/input");
  }
 }

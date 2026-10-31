@@ -1,5 +1,13 @@
 # Current handoff - start here
 
+## Sol checkpoint: recovery navigation lifecycle, 2026-10-31
+
+Active model: Sol6.1. Extracted navigation lifecycle into BoomerReceiptRecovery.navigate with restricted scope entry/release and guarded UI cleanup. Resource cleanup preserves the primary exception and attaches secondary cleanup failures; the scope is released even when close fails. Both rotation and BoomerReconcileCheck --navigate now use BoomerRecoveryNavigation and this lifecycle. Successful return requires cleanup; conclusive receipts remain durable if cleanup subsequently fails or STOP arrives after proof. Existing owner/UID/native input/detach guards are retained. No-pending operations skip navigation.
+
+Receipt suite now passes81 checks, including scope overlap, open failure, simultaneous read/close failure, cleanup failure after receipt, STOP during open, late STOP after conclusive proof, partial receipts and account isolation. Full portable validation passed in runtime/helper-build/scope-validation.txt. Diagnostic consolidation was followed by a source DEX build (scope-final-build.txt). Simulated lifecycle callbacks are not live game navigation or real detach proof. Installed release remains0.39; no phone/game/service/install action occurred.
+
+Next Luna/medium batch L4 checks the final diagnostic build/fixture compilation and records evidence without repeating unchanged suites solely for a model change. Then Sol should progress an independent parity slice: trace legacy new-troop-training selection/capacity/cost/config behavior against TrainingStartPolicy/Reader and implement only evidence-supported pure policy/contracts. Keep consuming training and Boomer enrollment pending their exact live/release proof. Hardware/signing availability blocks dependent release work only, not source work. Avoid repeatedly reviewing/retesting the same recovery code without a new finding.
+
 ## L3 checkpoint: grouped validation complete, Android device absent, 2026-10-31
 
 Active model: GPT-6 Luna, medium effort, user-confirmed. The grouped L3 packet passed portable validation with38 Boomer reconciliation checks,141 transaction-fault checks,36 receipt-permission checks,16 registry checks, recovery/ownership suites and35 Python tests. The Android fixture sources (BoomerEngineTests, BoomerReconciliationTests and RecoveryDetachFixture) compiled with source/target8 against the Android35 platform. `git diff --check` passed. Private logs: runtime/helper-build/l3-validation.txt and runtime/helper-build/l3-fixture-compile.txt.

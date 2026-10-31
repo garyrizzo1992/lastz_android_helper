@@ -10,19 +10,13 @@ public final class BoomerReconcileCheck {
    try(DisplaySession display=new DisplaySession()){
     AutomationController controller=new AutomationController(new File(args[0]),new File(args[1]),new File(args[2]),new File(args[3]),Boolean.parseBoolean(args[5]),0);MaintenanceContext c=new MaintenanceContext(controller);
     if(!args[4].equals(c.uid))throw new IOException("Expected character is not active");
-    BoomerNavigator navigator=new BoomerNavigator(c);
     // The receipt scope always uses preview-level permissions, even when recording
     // a verified receipt to the caller's ledger. Activate/Off/options remain forbidden.
-    if(navigate)c.activeFeature=new BoomerReceiptNavigation();JSONObject result;
-    try{
-    if(navigate)navigator.open();
-    int resolved=BoomerReceiptRecovery.inspect(c.store,c.uid,c.preview,new BoomerReceiptRecovery.World(){
+    int resolved=navigate?BoomerRecoveryNavigation.inspect(c):BoomerReceiptRecovery.inspect(c.store,c.uid,c.preview,new BoomerReceiptRecovery.World(){
      public void active()throws Exception{c.active();}public long now(){return System.currentTimeMillis();}
      public JSONObject read()throws Exception{return new BoomerReader(c).read();}
     });
-    result=new JSONObject().put("event","boomer-reconciliation").put("ok",true).put("accountUid",c.uid).put("resolved",resolved).put("unresolved",c.store.unresolved(c.uid,"boomer_auto_join")).put("dryRun",c.preview).put("activationSent",false).put("navigationAllowed",navigate).put("readOnlyReceipt",true);
-    }finally{if(navigate){c.active();navigator.close();}c.activeFeature=null;}
-    output=result;
+    output=new JSONObject().put("event","boomer-reconciliation").put("ok",true).put("accountUid",c.uid).put("resolved",resolved).put("unresolved",c.store.unresolved(c.uid,"boomer_auto_join")).put("dryRun",c.preview).put("activationSent",false).put("navigationAllowed",navigate).put("readOnlyReceipt",true);
    }
   }
  }catch(Throwable e){try{output=new JSONObject().put("event","boomer-reconciliation-error").put("ok",false).put("stopped",e instanceof InterruptedException).put("activationSent",false).put("error",e.toString());}catch(Exception ignored){}e.printStackTrace();}System.out.println(output);if(!output.optBoolean("ok",false))System.exit(1);}

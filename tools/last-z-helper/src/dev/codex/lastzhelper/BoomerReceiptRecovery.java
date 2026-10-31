@@ -4,6 +4,20 @@ import java.io.*;import java.util.*;import org.json.*;
 final class BoomerReceiptRecovery {
  static final String ID="boomer_auto_join";
  interface World {void active()throws Exception;long now();JSONObject read()throws Exception;}
+ interface Navigation extends World {
+  void enter()throws Exception;void leave()throws Exception;
+  void open()throws Exception;void close()throws Exception;
+ }
+ /** Scope restoration and UI cleanup cannot hide the original failure. */
+ static int navigate(MaintenanceStore store,String uid,boolean preview,Navigation world)throws Exception{
+  world.active();if(!store.unresolved(uid,ID))return 0;
+  world.enter();
+  try(AutoCloseable scope=world::leave){
+   try(AutoCloseable navigation=()->{world.active();world.close();}){
+    world.open();return inspect(store,uid,preview,world);
+   }
+  }
+ }
  static int inspect(MaintenanceStore store,String uid,boolean preview,World world)throws Exception{
   MaintenanceSchedule.uid(uid);world.active();if(!store.unresolved(uid,ID))return 0;
   JSONObject after=world.read();long now=world.now(),observed=after.getLong("observedMs");

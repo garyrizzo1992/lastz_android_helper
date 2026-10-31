@@ -2,13 +2,13 @@
 
 User preference: GPT-6.1 Sol for demanding work and GPT-6 Luna for routine batches. The user changes the model in this chat and says **continue**. This is a saved work queue, not an automatic model router or permission to start the bot.
 
-**Active model: GPT-6 Luna, medium effort (user-confirmed 2026-10-31).** L3 completed. Next dependent work requires Sol6.1/high. Group related implementation and checks to reduce manual switches; always specify the next model and effort and ask before changing batches.
+**Active model: GPT-6.1 Sol (session metadata, 2026-10-31).** Navigation lifecycle implementation complete. Next routine packet L4 requires Luna/medium. Group related implementation and checks to reduce manual switches; always specify the next model and effort and ask before changing batches.
 
 ## Current handoff
 
-**Status: L3 complete; waiting for Sol6.1/high.**
+**Status: L4 ready for Luna/medium confirmation.**
 
-Next batch: Sol review/release work below. Helper/Python remain stopped under the user's standing instruction. No game action or deployment is included. User requests continued independent work; pause only to request the next model.
+Next batch: L4 below. Helper/Python remain stopped under the user's standing instruction. No game action or deployment is included. User requests continued independent work; pause only to request the next model.
 
 ## Model allocation
 
@@ -89,6 +89,14 @@ Status: REVIEWED with atomic receipt/status fix; further integration evidence re
 Sol reviews results, implements/reviews explicit registry mapping, scheduling and the matching default-enabled UI choice while preserving false opt-outs. Complete same-signer candidate/installed Run/Preview/STOP checks within authorized selected-account bounds. Never generate a replacement key, uninstall to bypass signing, clear ambiguous history or turn protection Off to manufacture samples. Do not confuse source/fixture proof with installed-path completion.
 
 ## Remaining feature pattern
+
+### L4 — final lifecycle fixture compatibility/report (READY)
+
+Luna/medium: read scope-validation.txt and scope-final-build.txt privately; expect full portable pass with81receipt checks and successful final DEX build. Do not repeat the full suite just for the switch. Compile the three Android fixture sources with source/target8 using L3's exact classpath into a fresh ignored build directory, and run the81-check receipt suite on the JVM with an explicit temporary-root argument (matches the Android invocation form). Run git diff --check. If f7c5e6fe is connected/idle, use the guarded Android fixture script; otherwise mark hardware pending and continue documentation. Do not bypass controller/consent preflight. Update factual handoff and queue, commit directly main. New failure goes to Sol. Ask for Sol6.1/high to start the independent new-training source slice below.
+
+### S3 — independent new-training parity source slice (QUEUED after L4)
+
+Sol6.1/high: read parity contract/new-training discovery and trace legacy bot training caller/config/tests. Compare TrainingStartPolicy, TrainingStartReader and inspection feature with legacy tier choice, configured batch/capacity/cost and queue rules. Implement only supported pure planning/negative checks and explicit missing-evidence reporting; unknown game units/cost/unlock/capacity semantics stay blocked. Do not create a consuming start, register a worker or guess live controls from field names. Queue a coherent Luna validation/report batch after meaningful source progress. Keep Boomer release/hardware gates separately pending, rather than repeating completed recovery checks.
 
 ### L3 — grouped fixture validation and checkpoint (DONE on 2026-10-31)
 
