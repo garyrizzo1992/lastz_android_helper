@@ -2,7 +2,7 @@
 
 ## Progress checkpoint — 2026-10-31
 
-Run bot/Preview bot, enabled defaults with saved opt-outs, bounded recovery and shared controller ownership are installed as0.39. Two-account previews, actual idle-worker/helper-app recovery without replay, STOP, UI/default persistence and update data preservation passed. Broader repeated live consumption/hung-game/watchdog fault coverage remains incomplete. Auto Boomer's read-only active-state/expiry/options reader and exact native carousel navigation are implemented/tested in source but NOT production-enrolled/deployed; real activation/renewal validation awaits a user-chosen account and a proven receipt. Read the newest CURRENT_HANDOFF.md block for exact state and evidence; remaining phases below still apply.
+Run bot/Preview bot, enabled defaults with saved opt-outs, bounded recovery and shared controller ownership are installed as0.39. Two-account previews, actual idle-worker/helper-app recovery without replay, STOP, UI/default persistence and update data preservation passed. Broader repeated live consumption/hung-game/watchdog fault coverage remains incomplete. Auto Boomer's diagnostic activation/repeat, navigation STOP, isolated receipt recovery and durable transaction fault fixtures are verified in source, but Auto Boomer is NOT production-enrolled/deployed. The 141 transaction checks use real files with simulated input/STOP; the five Android detach checks use an owned shell rather than a real injected-session failure. Read the newest CURRENT_HANDOFF.md block for exact state and evidence; remaining phases below still apply.
 
 
 Prepared 2026-10-30, Europe/Malta. Baseline: installed helper 0.38.
@@ -26,7 +26,7 @@ The previous 0.37/reboot-locked checkpoint has been superseded. Do not rebuild t
 
 | Capability | Current Android status | Remaining work |
 | --- | --- | --- |
-| Account discovery, UID verification, serial rotation, due dates, floating controls and STOP | Installed 0.38; two-account preview and installed UI tested | Repeated live visits, more interruption timing, ownership across Python/native tools |
+| Account discovery, UID verification, serial rotation, due dates, floating controls and STOP | Installed 0.39; two-account preview and installed UI tested | Repeated live visits, more interruption timing, ownership across Python/native tools |
 | VIP free rewards | Existing production worker | Close any missing live/repeat coverage during rotation validation |
 | Alliance Help and Common/Rare Gifts | Existing production workers | Help credit-cap ambiguity; Rare Gift live receipt coverage |
 | Finished troop collection | Existing production worker | Validate all building families and partial results in rotation |
@@ -76,7 +76,7 @@ Required by the user's 2026-10-30 update. These instructions supersede earlier d
 7. Show the current account/task, next account, retry attempt/reason, next retry time, last verified result and any feature needing attention. Add recovery status to the existing grouped interface, not a separate diagnostic-only workflow.
 8. Pending features are labelled **Not implemented** / **Needs verification**. An enabled preference is not permission to run nonexistent/unverified code. For missing settings (for example shield target UID mapping or reporting provisioning), show **Needs setup** for that feature and continue independent configured work where possible.
 
-Completion: pressing Run bot starts live selected maintenance, Preview bot does one preview, every new available feature initially appears enabled, saved opt-outs remain disabled, and STOP prevents any restart. These are planned changes; installed 0.38 still has its existing Run maintenance rotation/preview-checkbox UI until this slice is built and deployed.
+Completion: pressing Run bot starts live selected maintenance, Preview bot does one preview, every new available feature initially appears enabled, saved opt-outs remain disabled, and STOP prevents any restart. These are planned changes; installed 0.39 has its existing Run maintenance rotation/preview-checkbox UI until this slice is built and deployed.
 
 ## Automatic recovery: retry, reopen and resume safely
 

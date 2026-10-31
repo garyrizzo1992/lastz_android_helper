@@ -4,9 +4,9 @@ User preference: GPT-6.1 Sol for demanding work and GPT-6 Luna for routine batch
 
 ## Current handoff
 
-**Status: waiting for the user to switch to Luna and say continue.**
+**Status: L1 complete; waiting for the user to switch to Sol6.1/high and say continue.**
 
-Next batch: L1 below. Do not execute it on the planning model merely to avoid waiting for a switch. No game action or deployment is part of this batch. Helper/Python remain stopped under the user's standing instruction.
+Next batch: S1 below. Do not execute it on Luna merely to avoid waiting for a switch. No game action or deployment is part of this batch. Helper/Python remain stopped under the user's standing instruction.
 
 ## Model allocation
 
@@ -27,9 +27,9 @@ This is project-specific allocation, not a claim that a small edit is always eas
 6. At a model boundary, asking for a switch is now explicitly authorized by the user. If the user is away, leave the queue pending rather than inventing a response or spending the heavier model on the queued routine batch. Other missing-information questions still follow the user's no-questions preference unless they change it.
 7. A model switch/continue resumes development work only. It never clears STOP, selects accounts, starts gameplay or authorizes a deployment by itself. All existing device/receipt/ownership rules remain in force.
 
-## L1 — next Luna batch: align factual status documents
+## L1 — completed Luna batch: align factual status documents
 
-Status: READY, awaiting manual model switch.
+Status: DONE on 2026-10-31; documentation-only commit recorded below.
 
 Inputs:
 
@@ -39,12 +39,14 @@ Inputs:
 
 Steps:
 
-1. Correct the stale current-progress paragraph at the top of ANDROID_BOT_REMAINING_PLAN.md. It still says real Boomer activation awaits an account choice. The newest handoff records successful diagnostic activation/repeat, isolated receipt recovery and transaction fixtures; production enrollment/deployment is still pending.
-2. Correct the current-status account-rotation table row that still says installed0.38. Installed Run bot/Preview/defaults/recovery are0.39. Preserve explicitly historical baseline/version paragraphs and their dates.
-3. Cross-check that current-status sections agree: installed0.39; Boomer source diagnostics verified but not in installed Run bot;141transaction checks use simulated input/STOP with real files;5Android detach checks use an owned shell, not a real injected-session failure; original signing key is a deployment prerequisite, last known unavailable on the Mac.
-4. Update CURRENT_HANDOFF with the factual documentation result and this queue's next state. No source behavior changes.
-5. Run git diff --check and verify any edited file links. Do not rerun unchanged application test suites just because the model changed. If source has unexpectedly changed since the cited baseline, record it and stop for Sol review instead of guessing which results apply.
-6. Commit the documentation directly to main, preserving remote changes. Mark L1 DONE with the commit/checks; mark S1 READY. Ask for Sol6.1 and stop the batch.
+1. Updated the current-progress paragraph at the top of ANDROID_BOT_REMAINING_PLAN.md with the verified diagnostic activation/repeat, isolated receipt recovery and transaction-fixture status; production enrollment/deployment remains pending.
+2. Corrected the current-status account-rotation row from installed0.38 to installed0.39 while preserving historical baseline/version paragraphs and dates.
+3. Cross-checked current-status wording: installed0.39; Boomer diagnostics are not in installed Run bot; 141 transaction checks use simulated input/STOP with real files; five Android detach checks use an owned shell; the original signing key remains a deployment prerequisite and is unavailable on this Mac.
+4. Updated CURRENT_HANDOFF with this factual documentation result and the next queue state. No source behavior changes.
+5. Ran git diff --check and link checks; no application suites or device actions were rerun.
+6. Committed directly to main and marked S1 READY. Ask for Sol6.1/high before starting S1.
+
+Evidence: commit `DOCUMENTATION_COMMIT` (replace with the published commit SHA after publication); `git diff --check` passed; edited links resolve within the repository.
 
 Acceptance: no contradictory current-status claims; historical checkpoints preserved; no new claims of installed Boomer/full parity; no app, runtime, phone or history changes; only factual documentation/queue edits committed.
 
