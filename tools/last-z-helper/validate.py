@@ -15,7 +15,7 @@ def main():
     # Share the suite inventory with Windows so the two entry points stay aligned.
     windows = (HERE / "validate.ps1").read_text(encoding="utf-8")
     names = list(dict.fromkeys(re.findall(r'"\$PSScriptRoot/tests/([A-Za-z0-9]+Tests)\.java"', windows)))
-    for name in names:
+    for name in [name for name in names if name not in ("BoomerReceiptPermissionsTests", "MaintenanceRegistryTests")]:
         run(java_tool("javac"), "-encoding", "UTF-8", "-cp", classes, "-d", tests, HERE / "tests" / (name + ".java"))
         run(java_tool("java"), "-cp", os.pathsep.join(map(str, [tests, classes])), "dev.codex.lastzhelper." + name)
     run("node", "--check", HERE / "assets/input-agent.js")
@@ -41,6 +41,12 @@ def main():
     run(java_tool("javac"), "-encoding", "UTF-8", "-cp", jar, "-d", jvm, *sources)
     for name in re.findall(r"dev\.codex\.lastzhelper\.([A-Za-z]+Tests)", inventory):
         run(java_tool("java"), "-cp", os.pathsep.join(map(str, [jvm, jar])), "dev.codex.lastzhelper." + name)
+    permission_classes = BUILD / "receipt-permission-tests"
+    permission_classes.mkdir(exist_ok=True)
+    permission_cp = os.pathsep.join(map(str, [classes, jar]))
+    for name in ("BoomerReceiptPermissionsTests", "MaintenanceRegistryTests"):
+        run(java_tool("javac"), "-encoding", "UTF-8", "-cp", permission_cp, "-d", permission_classes, HERE / "tests" / (name + ".java"))
+        run(java_tool("java"), "-cp", os.pathsep.join(map(str, [permission_classes, classes, jar])), "dev.codex.lastzhelper." + name)
     print("All portable validation suites passed")
 
 

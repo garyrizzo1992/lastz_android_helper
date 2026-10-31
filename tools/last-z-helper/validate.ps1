@@ -102,3 +102,14 @@ if($LASTEXITCODE){throw 'Auto Boomer navigation scope compilation failed'}
 if($LASTEXITCODE){throw 'Auto Boomer navigation scope tests failed'}
 node "$PSScriptRoot/tests/boomer_navigation_guard.test.js"
 if($LASTEXITCODE){throw 'Auto Boomer native navigation tests failed'}
+
+$receiptJar="$root/runtime/helper-build/json-20240303.jar"
+& "$jdk/bin/javac.exe" -encoding UTF-8 -cp "$classes;$receiptJar" -d $testClasses "$PSScriptRoot/tests/BoomerReceiptPermissionsTests.java"
+if($LASTEXITCODE){throw 'Auto Boomer receipt-permission compilation failed'}
+& "$jdk/bin/java.exe" -cp "$testClasses;$classes;$receiptJar" dev.codex.lastzhelper.BoomerReceiptPermissionsTests
+if($LASTEXITCODE){throw 'Auto Boomer receipt-permission tests failed'}
+
+& "$jdk/bin/javac.exe" -encoding UTF-8 -cp "$classes;$receiptJar" -d $testClasses "$PSScriptRoot/tests/MaintenanceRegistryTests.java"
+if($LASTEXITCODE){throw 'Production registry test compilation failed'}
+& "$jdk/bin/java.exe" -cp "$testClasses;$classes;$receiptJar" dev.codex.lastzhelper.MaintenanceRegistryTests
+if($LASTEXITCODE){throw 'Production registry identity tests failed'}

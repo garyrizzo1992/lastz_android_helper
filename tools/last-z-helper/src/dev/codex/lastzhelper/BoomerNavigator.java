@@ -4,7 +4,7 @@ import java.io.*;import org.json.*;
 final class BoomerNavigator {
  final MaintenanceContext c;BoomerNavigator(MaintenanceContext c){this.c=c;}
  void waitNotice()throws Exception{
-  long until=System.currentTimeMillis()+5000;boolean reported=false;
+  long until=System.currentTimeMillis()+30000;boolean reported=false;
   while(true){c.active();try(GameMemory m=new GameMemory(c.controller.cache)){
    if(!m.open("UINoticeTips"))return;
    int expected=m.open("UIAllianceAutoJoinRally")?2:m.open("UIActivityCenterTable")?1:0;
