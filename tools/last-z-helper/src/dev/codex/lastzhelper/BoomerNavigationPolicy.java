@@ -13,5 +13,6 @@ final class BoomerNavigationPolicy {
   if((EVENT+"bottomCloseBtn").equals(path))return "close-event";return "";
  }
  static boolean carousel(String action,String path,String child,String direction,boolean enabled){return enabled&&action.equals("ui-swipe")&&path.equals(EVENT+"tabScrollViewN")&&child.equals("Viewport")&&(direction.equals("left")||direction.equals("right"));}
+ static boolean retryNotice(boolean dispatched,String phase,String action,String path,String expectedPath,String error){return !dispatched&&"native_pre_dispatch".equals(phase)&&"ui-tap".equals(action)&&path.equals(expectedPath)&&!route(path).isEmpty()&&"Error: Unexpected active window over Event Center: UINoticeTips".equals(error);}
  static boolean permits(String action,String path,boolean preview){return action.equals("ui-tap")&&(!route(path).isEmpty()||(!preview&&path.equals(DIALOG+"autoJoinBtnN")));}
 }

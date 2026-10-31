@@ -12,6 +12,14 @@ public final class BoomerNavigationTests {
   expect(BoomerNavigationPolicy.carousel("ui-swipe",path,"Viewport","right",true),"Exact native reverse carousel");
   expect(BoomerNavigationPolicy.card(BoomerNavigationPolicy.EVENT+"groupItems/372338/tabItems/40005/btn"),"Group changes retain exact event identity");
   expect(!BoomerNavigationPolicy.card(BoomerNavigationPolicy.EVENT+"groupItems/../other/tabItems/40005/btn"),"No path escape");
+  String error="Error: Unexpected active window over Event Center: UINoticeTips";
+  expect(BoomerNavigationPolicy.retryNotice(false,"native_pre_dispatch","ui-tap",card,card,error),"Only exact no-dispatch notice may retry navigation");
+  expect(!BoomerNavigationPolicy.retryNotice(true,"native_pre_dispatch","ui-tap",card,card,error),"Dispatched input never retries");
+  expect(!BoomerNavigationPolicy.retryNotice(false,"input_started","ui-tap",card,card,error),"Wrong receipt phase never retries");
+  expect(!BoomerNavigationPolicy.retryNotice(false,"native_pre_dispatch","ui-swipe",card,card,error),"Only the certified navigation tap");
+  expect(!BoomerNavigationPolicy.retryNotice(false,"native_pre_dispatch","ui-tap",card,BoomerNavigationPolicy.ENTRY,error),"Different path never retries");
+  expect(!BoomerNavigationPolicy.retryNotice(false,"native_pre_dispatch","ui-tap",BoomerNavigationPolicy.DIALOG+"autoJoinBtnN",BoomerNavigationPolicy.DIALOG+"autoJoinBtnN",error),"Activation never uses navigation retry");
+  expect(!BoomerNavigationPolicy.retryNotice(false,"native_pre_dispatch","ui-tap",card,card,error+",Other"),"Another unknown window never retries");
   System.out.println("Auto Boomer request scope: "+checks+" checks passed");
  }
 }

@@ -70,7 +70,7 @@ function execute(args) { return new Promise(resolve => {
        if(route==='close-dialog')state.dialogState=number(field(windows,'UIAllianceAutoJoinRally'),'State');
       }
       const allowed=new Set(['MainUI_SU','UIMultiLanguageFloatingBall','UIAlarm','TouchScreenEffect','UICommonMessageBar']);if(route!=='entry'&&route!=='home')allowed.add('UIActivityCenterTable');if(route==='close-dialog')allowed.add('UIAllianceAutoJoinRally');
-      const nodes=windows.add(24).readPointer(),log=windows.add(11).readU8();if(log>18)throw Error('Auto Team-Up navigation window bound');state.knownWindows=true;for(let i=0;i<(1<<log);i++){const n=nodes.add(i*24);if((n.add(9).readU8()&15)===4&&(n.add(8).readU8()&15)===5&&number(n.readPointer(),'State')===2&&!allowed.has(luaString(n.add(16).readPointer())))state.knownWindows=false;}
+      const nodes=windows.add(24).readPointer(),log=windows.add(11).readU8();if(log>18)throw Error('Auto Team-Up navigation window bound');state.knownWindows=true;state.unknownWindows=[];for(let i=0;i<(1<<log);i++){const n=nodes.add(i*24);if((n.add(9).readU8()&15)===4&&(n.add(8).readU8()&15)===5&&number(n.readPointer(),'State')===2&&!allowed.has(luaString(n.add(16).readPointer()))){state.knownWindows=false;state.unknownWindows.push(luaString(n.add(16).readPointer()));}}
       boomerNavigationGuard(args,state);
     }
     function checkBoomerActivation(){
@@ -238,7 +238,9 @@ function boomerRouteForPath(path){
 }
 function boomerNavigationGuard(args,state){
  const route=boomerRouteForPath(args.path);
- if(!route||args.label!==undefined||args.parent!==undefined||state.scene!==(route==='home'?2:1)||state.knownWindows!==true)throw Error('Auto Team-Up navigation changed');
+ if(!route||args.label!==undefined||args.parent!==undefined)throw Error('Auto Team-Up navigation request shape changed');
+ if(state.scene!==(route==='home'?2:1))throw Error('Auto Team-Up navigation scene changed');
+ if(state.knownWindows!==true)throw Error('Unexpected active window over Event Center: '+(state.unknownWindows||[]).join(','));
  if(route==='carousel'){if(!boomerCardPath(args.eventCardPath)||args.action!=='ui-swipe'||args.eventCarousel!==true||args.child!=='Viewport'||!['left','right'].includes(args.direction)||state.centerState!==2||state.modals!==1)throw Error('Auto Team-Up carousel context changed');return true;}
  if(args.action!=='ui-tap'||args.boomerRoute!==route||args.child!==undefined)throw Error('Auto Team-Up navigation request changed');
  if(route==='entry'||route==='home'){if(state.modals!==0||state.baseState!==2)throw Error('Auto Team-Up base changed');return true;}
