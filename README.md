@@ -30,7 +30,16 @@ python3 tools/last-z-helper/fetch_assets.py
 python3 tools/last-z-helper/validate.py
 ```
 
-The portable validator builds DEX and runs the Windows suite inventory, all JavaScript guard tests, Python tests and the cross-process recovery suites. `build.py` defaults to DEX only. To package an APK, pass `--apk --keystore /private/path/to/existing-key.jks` with `LASTZ_KEYSTORE_PASSWORD` set in the environment. It never generates a replacement key or installs the app. Keep the original signer when updating an existing installation.
+The portable validator builds DEX and runs the Windows suite inventory, all JavaScript guard tests, Python tests and the cross-process recovery suites.
+
+Optional rooted-device checks, after stopping every controller:
+
+```sh
+python3 tools/last-z-helper/validate_android_fixtures.py --serial YOUR_DEVICE_SERIAL
+```
+
+This explicit-device command builds and runs isolated filesystem and process-ownership fixtures. It refuses an active controller or requested bot run, uses no game input/memory and does not replace installed app assets. Its private report stays under ignored `runtime/helper-build`. The detach fixture holds the shared controller lock and uses an owned shell that expires within30seconds even if its parent disconnects.
+ `build.py` defaults to DEX only. To package an APK, pass `--apk --keystore /private/path/to/existing-key.jks` with `LASTZ_KEYSTORE_PASSWORD` set in the environment. It never generates a replacement key or installs the app. Keep the original signer when updating an existing installation.
 
 The APK is written to `bin/last-z-helper.apk`. Installation is separate; use an explicitly selected ADB device and preserve settings, histories and the existing signing key. A fresh clone does not contain the private signing key needed to upgrade an existing installation. Build scripts retain their existing test-key behavior for new installations; do not generate a replacement key for an installed helper.
 

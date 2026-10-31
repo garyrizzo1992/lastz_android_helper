@@ -19,7 +19,8 @@ Read the newest CURRENT_HANDOFF checkpoint first. Auto Boomer has live source-le
 3. A normal repeat returned NOTHING_TO_DO with the same expiry and no additional operation.
 4. Missing/wrong UID and STOP-before-start rejected before injection. A preview stopped during Event Center navigation and detached without changing maintenance state.
 5. Isolated ledger fixtures used the actual game receipt: preview preserved pending state; exact recovery verified it; repeat did nothing; a mismatched request window stayed pending. Production histories were unchanged. No second activation was sent.
-6. JavaScript native guards, Java policies, ownership/recovery suites, Python suites and Android-side receipt permission checks pass. See CURRENT_HANDOFF for counts and private evidence paths.
+6. BoomerEngine has141filesystem transaction fault checks on JVM and Android. STOP/input callbacks are simulated; real ledger persistence is checked. An Android5check owned-shell fixture verifies the /proc recovery guard before/after owner exit, without a real injector or game access.
+7. JavaScript native guards, Java policies, ownership/recovery suites, Python suites and Android-side receipt permission checks pass. See CURRENT_HANDOFF for counts and private evidence paths.
 
 UINoticeTips is the game's scrolling state-announcement overlay. Navigation waits up to30seconds for it to disappear. Only an exact native no-dispatch receipt for that notice alone permits one navigation retry. Activation never uses that retry path. Other unknown windows remain guarded stops; do not add a blanket window exemption.
 

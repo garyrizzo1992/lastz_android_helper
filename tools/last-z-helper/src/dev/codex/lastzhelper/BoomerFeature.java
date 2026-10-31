@@ -10,25 +10,27 @@ final class BoomerFeature implements MaintenanceFeature {
   return permitsInput(request.optString("action"),request.optString("path"),preview);
  }
  public MaintenanceResult run(MaintenanceContext c)throws Exception{
-  String pending=null;JSONObject before=null;try{
-   new BoomerNavigator(c).open();
-   BoomerReader reader=new BoomerReader(c);before=reader.read();String state=before.getString("state");
-   if(state.equals("BLOCKED"))return result(MaintenanceResult.Outcome.BLOCKED,"Auto Team-Up state is ambiguous; no activation",System.currentTimeMillis()+BoomerPolicy.RETRY,before);
-   if(c.preview)return result(MaintenanceResult.Outcome.PREVIEW,"Auto Boomer preview: "+state+"; no activation",before.getLong("nextDueMs"),before);
-   if(state.equals("ACTIVE"))return result(MaintenanceResult.Outcome.NOTHING_TO_DO,"Auto Team-Up already active; existing expiry retained",before.getLong("nextDueMs"),before);
-   boolean selected=false;for(int i=0;i<before.getJSONArray("options").length();i++)selected|=before.getJSONArray("options").getJSONObject(i).getBoolean("selected");
-   if(!selected)return result(MaintenanceResult.Outcome.BLOCKED,"Choose at least one join option in the game",System.currentTimeMillis()+BoomerPolicy.RETRY,before);
-   JSONObject previous=c.store.latestVerified(c.uid,id(),"activate");String period=previous==null?"initial":"after_"+previous.getJSONObject("after").getLong("expiryMs");
-   JSONObject fresh=reader.read();if(!fresh.getString("state").equals("INACTIVE")||!fresh.getJSONArray("options").toString().equals(before.getJSONArray("options").toString()))throw new IOException("Auto Team-Up state/options changed before activation");
-   long sent=System.currentTimeMillis();fresh.put("activationRequestedMs",sent);
-   pending=c.begin(id(),period,"activate",fresh);c.active();
-   c.input.action(new JSONObject().put("action","ui-tap").put("path",BoomerReader.DIALOG+"autoJoinBtnN").put("boomerAction","activate").put("boomerExpiry",fresh.getLong("expiryMs")).put("boomerOption1",fresh.getJSONArray("options").getJSONObject(0).getBoolean("selected")).put("boomerOption2",fresh.getJSONArray("options").getJSONObject(1).getBoolean("selected")));
-   c.input.pause(500);JSONObject after=reader.read();long receiptDeadline=sent+12000;
-   while(after.getString("state").equals("INACTIVE")&&after.getJSONArray("options").toString().equals(before.getJSONArray("options").toString())&&System.currentTimeMillis()<receiptDeadline){c.input.pause(250);after=reader.read();}
-   if(!after.getString("state").equals("ACTIVE")||!after.getJSONArray("options").toString().equals(before.getJSONArray("options").toString())||!BoomerPolicy.activated(before.getLong("expiryMs"),after.getLong("expiryMs"),sent,after.getLong("observedMs"))||!BoomerReconciliationPolicy.receipt(fresh,after))throw new IOException("Auto Team-Up activation expiry/options receipt not confirmed");
-   after.put("activationSentMs",sent);c.store.verified(c.uid,pending,System.currentTimeMillis(),after);pending=null;return result(MaintenanceResult.Outcome.COMPLETED,"Auto Team-Up activated; 12-hour expiry verified, join choices preserved",after.getLong("nextDueMs"),after);
-  }catch(InterruptedException e){throw e;}catch(Exception e){c.event(id(),"Auto Team-Up stopped: "+e.getMessage());if(pending!=null){c.store.uncertain(c.uid,pending,e.toString());return MaintenanceResult.of(MaintenanceResult.Outcome.UNCERTAIN,"Auto Team-Up attempt retained; no repeat: "+e.getMessage(),0);}return MaintenanceResult.of(MaintenanceResult.Outcome.FAILED,"Auto Team-Up stopped: "+e.getMessage(),System.currentTimeMillis()+BoomerPolicy.RETRY);}
+  try{
+   new BoomerNavigator(c).open();final BoomerReader reader=new BoomerReader(c);
+   MaintenanceResult result=BoomerEngine.run(new BoomerEngine.Journal(){
+    public String uid(){return c.uid;}
+    public boolean unresolved()throws Exception{return c.store.unresolved(c.uid,id());}
+    public JSONObject previous()throws Exception{return c.store.latestVerified(c.uid,id(),"activate");}
+    public String begin(String period,long now,JSONObject before)throws Exception{return c.begin(id(),period,"activate",before);}
+    public void verified(String key,long now,JSONObject after)throws Exception{c.store.verified(c.uid,key,now,after);}
+    public void uncertain(String key,String reason)throws Exception{c.store.uncertain(c.uid,key,reason);}
+   },new BoomerEngine.World(){
+    public void active()throws Exception{c.active();}
+    public long now(){return System.currentTimeMillis();}
+    public JSONObject read()throws Exception{return reader.read();}
+    public void pause(long millis)throws Exception{c.input.pause(millis);}
+    public void activate(JSONObject before)throws Exception{
+     c.input.action(new JSONObject().put("action","ui-tap").put("path",BoomerReader.DIALOG+"autoJoinBtnN").put("boomerAction","activate").put("boomerExpiry",before.getLong("expiryMs")).put("boomerOption1",before.getJSONArray("options").getJSONObject(0).getBoolean("selected")).put("boomerOption2",before.getJSONArray("options").getJSONObject(1).getBoolean("selected")));
+    }
+   },c.preview);
+   if(result.outcome==MaintenanceResult.Outcome.FAILED||result.outcome==MaintenanceResult.Outcome.UNCERTAIN)c.event(id(),result.reason);
+   return result;
+  }catch(InterruptedException e){throw e;}catch(Exception e){c.event(id(),"Auto Team-Up stopped: "+e.getMessage());return MaintenanceResult.of(MaintenanceResult.Outcome.FAILED,"Auto Team-Up stopped: "+e.getMessage(),System.currentTimeMillis()+BoomerPolicy.RETRY);}
   finally{c.active();new BoomerNavigator(c).close();}
  }
- MaintenanceResult result(MaintenanceResult.Outcome outcome,String reason,long due,JSONObject snapshot){return new MaintenanceResult(outcome,reason,due,Collections.singletonMap("snapshot",snapshot.toString()));}
 }

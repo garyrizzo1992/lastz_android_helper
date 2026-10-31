@@ -8,8 +8,8 @@ if((Get-FileHash $jar -Algorithm SHA256).Hash.ToLower() -ne $expected){throw 'Pi
 $classes="$root/runtime/helper-build/recovery-jvm-$([Guid]::NewGuid().ToString('N'))"
 New-Item -ItemType Directory -Force $classes | Out-Null
 $src="$root/tools/last-z-helper/src/dev/codex/lastzhelper"
-$files=@('MaintenanceResult','MaintenanceSchedule','RotationPolicy','RotationShortcut','RotationProfiles','RecoveryPolicy','RecoveryState','RunRequest','ControllerOwnership','LegacyOwnershipSession','ReconciliationPolicy','RecoveryEngine','ControllerLease','BoomerPolicy','BoomerReconciliationPolicy') | ForEach-Object {"$src/$_.java"}
-& "$jdk/bin/javac.exe" -encoding UTF-8 -cp $jar -d $classes $files "$PSScriptRoot/jvm/StateProbe.java" "$PSScriptRoot/jvm/RotationFiles.java" "$PSScriptRoot/jvm/RecoveryStorageTests.java" "$PSScriptRoot/jvm/OwnershipProtocolTests.java" "$PSScriptRoot/jvm/OwnershipLockProbe.java" "$PSScriptRoot/jvm/ReconciliationTests.java" "$PSScriptRoot/jvm/RecoveryEngineTests.java" "$PSScriptRoot/jvm/ControllerLeaseTests.java" "$PSScriptRoot/jvm/BoomerReconciliationTests.java"
+$files=@('MaintenanceResult','MaintenanceSchedule','RotationPolicy','RotationShortcut','RotationProfiles','RecoveryPolicy','RecoveryState','RunRequest','ControllerOwnership','LegacyOwnershipSession','ReconciliationPolicy','RecoveryEngine','ControllerLease','BoomerPolicy','BoomerReconciliationPolicy','BoomerEngine','MaintenanceStore','ShareLedger') | ForEach-Object {"$src/$_.java"}
+& "$jdk/bin/javac.exe" -encoding UTF-8 -cp $jar -d $classes $files "$PSScriptRoot/jvm/StateProbe.java" "$PSScriptRoot/jvm/RotationFiles.java" "$PSScriptRoot/jvm/RecoveryStorageTests.java" "$PSScriptRoot/jvm/OwnershipProtocolTests.java" "$PSScriptRoot/jvm/OwnershipLockProbe.java" "$PSScriptRoot/jvm/ReconciliationTests.java" "$PSScriptRoot/jvm/RecoveryEngineTests.java" "$PSScriptRoot/jvm/ControllerLeaseTests.java" "$PSScriptRoot/jvm/BoomerReconciliationTests.java" "$PSScriptRoot/jvm/BoomerEngineTests.java"
 if($LASTEXITCODE){throw 'Recovery/session JVM compilation failed'}
 & "$jdk/bin/java.exe" -cp "$classes;$jar" dev.codex.lastzhelper.RecoveryStorageTests
 if($LASTEXITCODE){throw 'Recovery/session/default persistence tests failed'}
@@ -28,3 +28,6 @@ if($LASTEXITCODE){throw 'Recovery ownership handoff tests failed'}
 
 & "$jdk/bin/java.exe" -cp "$classes;$jar" dev.codex.lastzhelper.BoomerReconciliationTests
 if($LASTEXITCODE){throw 'Auto Boomer read-only reconciliation tests failed'}
+
+& "$jdk/bin/java.exe" -cp "$classes;$jar" dev.codex.lastzhelper.BoomerEngineTests
+if($LASTEXITCODE){throw 'Auto Boomer durable transaction fault tests failed'}

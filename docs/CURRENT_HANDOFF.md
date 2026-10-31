@@ -1,5 +1,32 @@
 # Current handoff - start here
 
+## Resumed checkpoint: current bot stopped; transaction fault coverage, 2026-10-31
+
+User explicitly resumed work, requested **stop the current bot**, and repeated **no questions while away**. The earlier work-stop checkpoint is superseded. Continue regular checkpoints directly on main; no PR.
+
+### Current operational state
+
+A real installed0.39 **bounties-group** worker and its ARM64 injector were running on entry. Sent its durable STOP file, then the official HelperService stop action. Verified that worker and injector exited, STOP remains present and requestedRunning=false. No Python worker was running. Do not restart the stopped bot or Python. Operational histories were not restored, cleared or edited; any prior attempts remain intact. The game UI was left where the stopped worker left it.
+
+No APK installation, installed-agent replacement or subsequent game input occurred. Android checks below operate only on isolated files and an owned shell process; they do not inspect game memory. Installed release remains the previously verified signed0.39. The Windows signing host192.168.1.12 still times out; the existing private signing key remains unavailable on this Mac.
+
+### Implemented and verified
+
+- Extracted the activation transaction into **BoomerEngine**, with small game/journal interfaces. BoomerFeature retains the same native reader, scoped input permissions, exact activation arguments and navigation adapter. Its production registry status is unchanged: Auto Boomer is not enrolled yet.
+- Engine validates same account/event, fresh observations, exact inactive/active expiry proof and typed ordered join options. It refuses an unresolved operation even when called outside MaintenanceRunner. Atomic intent must precede input; changed options/identity before the intent cannot consume. No uncertain commit is replayed.
+- Added **141 durable transaction fault checks**, passing on both JVM and Android. Files are real atomic ledger files; input and STOP are simulated. Cases include STOP before/after intent persistence and after dispatch, lost journal return, lost input receipt, wrong/missing after-state, short expiry, receipt/uncertainty write failure, late STOP after conclusive proof, a saved receipt followed by caller failure, normal no-op repeats, natural-expiry renewal and preservation of another account's records. These are not claims of a deliberately interrupted real game activation.
+- Added an Android **5-check detach guard fixture**: an owned, short-lived shell has the injector-shaped filename, while the fixture holds the shared controller lock. RecoveryGuard rejects recovery while that process is alive, then allows it only after exact owner exit is confirmed. The child is not a real injector, and no game process is touched. Finally cleanup removes the owned executable; its lifetime is bounded30seconds if the parent disconnects.
+- Added reproducible **validate_android_fixtures.py --serial DEVICE**. It requires root and an explicit device, refuses active controllers/requested bot consent, builds the source and fixtures, and uses a fresh private /data/local/tmp directory. It never clears the app STOP file, starts gameplay, injects an agent or changes app settings/history.
+- Full portable validation passes, including the new141transaction checks plus all existing policy/native geometry/permissions,35Python, recovery/storage/ownership/receipt/registry suites. Android fixture command passes141transaction and5detach-guard checks. Source input-position audit and git diff checks pass.
+
+Private evidence: parent work/boomer-evidence/current-bot-stop.json, work/mac-validation.txt, work/resume-android-fixtures.txt and this checkout's ignored runtime/helper-build/android-fixtures-latest.json. Do not publish device files, private reports, keys or binaries.
+
+### Next concrete actions
+
+1. Continue recovery integration using the separately restricted receipt-navigation scope before allowing a consuming replay. Preserve ambiguous operation barriers and partial verified receipts. BoomerEngine now provides the tested transaction boundary; do not replace native guards with the fixture's simulated world.
+2. When a bounded phone adapter preview is appropriate, freshly verify the intended UID/UI and controller ownership first; the prior stopped bounty worker is not permission to restart it. Do not clear the user's STOP signal or toggle active Auto Team-Up Off merely for testing.
+3. Complete registry/scheduling/default-enabled checkbox and same-signer installed Run/Preview/STOP verification after release gates in AUTO_BOOMER_NEXT.md. Original signing key is required; do not generate another or uninstall. Other parity work remains in ANDROID_BOT_REMAINING_PLAN.md.
+
 ## Stop checkpoint after resume audit, 2026-10-31
 
 User requested **"stop at the next checkpoint"**. Work is stopped after this checkpoint; do not resume until requested. Continue committing directly to main, with regular checkpoints and no PR.
