@@ -2,11 +2,13 @@
 
 User preference: GPT-6.1 Sol for demanding work and GPT-6 Luna for routine batches. The user changes the model in this chat and says **continue**. This is a saved work queue, not an automatic model router or permission to start the bot.
 
+**Active model: GPT-6 Luna (user-confirmed 2026-10-31).** Do not start S1 while Luna is active; switch to Sol6.1/high before resuming the critical receipt-recovery implementation.
+
 ## Current handoff
 
-**Status: L1 complete; waiting for the user to switch to Sol6.1/high and say continue.**
+**Status: L1 complete; S1 paused because the active model is Luna. Waiting for the user to switch to Sol6.1/high and say continue.**
 
-Next batch: S1 below. Do not execute it on Luna merely to avoid waiting for a switch. No game action or deployment is part of this batch. Helper/Python remain stopped under the user's standing instruction.
+Next batch: S1 below. Do not execute it on Luna merely to avoid waiting for a switch. No source behavior changes were made in this Luna turn. No game action or deployment is part of this batch. Helper/Python remain stopped under the user's standing instruction.
 
 ## Model allocation
 

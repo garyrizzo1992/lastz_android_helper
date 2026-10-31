@@ -1,12 +1,12 @@
 # Current handoff - start here
 
-## Workflow checkpoint: L1 documentation complete; Sol6.1 next, 2026-10-31
+## Workflow checkpoint: L1 complete; active model Luna, Sol6.1 required for S1, 2026-10-31
 
 User now requests manual model handoffs: GPT-6.1 Sol for demanding work, GPT-6 Luna for routine batches. The user switches the model in this chat and says continue. Asking for the next model switch at a safe batch boundary is explicitly allowed; do not simulate a router with sub-agents or create another chat.
 
-Read MODEL_WORK_QUEUE.md for the executable next batch and escalation rules. **L1 is complete**: the remaining-plan progress paragraph and rotation-version row now match the newest source/evidence checkpoint, and the queue records the documentation commit/checks. **Next: switch to Sol6.1/high, then continue with S1**, bounded receipt-recovery integration into rotation. Sol will prepare the next bounded Luna validation packet after critical implementation.
+Read MODEL_WORK_QUEUE.md for the executable next batch and escalation rules. **L1 is complete**: the remaining-plan progress paragraph and rotation-version row now match the newest source/evidence checkpoint, and the queue records the documentation commit/checks. The user confirms **GPT-6 Luna is currently active**; S1 is paused and must resume only after switching to **Sol6.1/high**, because it is critical receipt-recovery integration into rotation. Sol will prepare the next bounded Luna validation packet after critical implementation.
 
-This checkpoint changes workflow documents only. No new validation, phone action or deployment occurred. Source implementation/evidence baseline remains7c75f4e. The last verified operational state is bot/Python stopped, STOP retained and installed0.39 unchanged; do not infer a fresh phone-state check from this documentation work. A model switch/continue does not restart gameplay. Commit directly to main and retain regular checkpoints. L1 documentation edits are limited to factual status alignment; no source behavior changed.
+This checkpoint changes workflow documents only. No source behavior, validation, phone action or deployment occurred in this Luna turn. Source implementation/evidence baseline remains7c75f4e. The last verified operational state is bot/Python stopped, STOP retained and installed0.39 unchanged; do not infer a fresh phone-state check from this documentation work. A model switch/continue does not restart gameplay. Commit directly to main and retain regular checkpoints. L1 documentation edits remain limited to factual status alignment; S1 has not started.
 
 ## Resumed checkpoint: current bot stopped; transaction fault coverage, 2026-10-31
 
