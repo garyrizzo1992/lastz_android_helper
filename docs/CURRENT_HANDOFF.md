@@ -1,5 +1,11 @@
 # Current handoff - start here
 
+## L3 checkpoint: grouped validation complete, Android device absent, 2026-10-31
+
+Active model: GPT-6 Luna, medium effort, user-confirmed. The grouped L3 packet passed portable validation with38 Boomer reconciliation checks,141 transaction-fault checks,36 receipt-permission checks,16 registry checks, recovery/ownership suites and35 Python tests. The Android fixture sources (BoomerEngineTests, BoomerReconciliationTests and RecoveryDetachFixture) compiled with source/target8 against the Android35 platform. `git diff --check` passed. Private logs: runtime/helper-build/l3-validation.txt and runtime/helper-build/l3-fixture-compile.txt.
+
+`adb devices` returned no connected serial, so the Android execution packet was not run. No game input, controller start, STOP change, install or live navigation occurred. Bot/Python remain stopped and installed0.39 is unchanged. The next work is Sol6.1/high dependent integration/release review; reconnecting the selected device and obtaining the original signing key remain required for hardware and signed-path evidence.
+
 ## Continued Sol checkpoint: partial receipts and Android fixture packet, 2026-10-31
 
 User requests continued independent work and pauses only for model changes. Active model: Sol6.1. Extended BoomerReconciliationTests to38 passing JVM checks: exact partial proof is durably saved while an incomplete legacy attempt remains fenced, feature UNCERTAIN is preserved, another account's records remain unchanged, and repeated incomplete recovery performs no write. Android-compatible temporary roots now use the runner's supplied isolated directory. validate_android_fixtures.py includes this38-check receipt suite alongside141transaction and5owned-shell detach checks. Python syntax compilation and git diff --check pass. The runner itself has not run on Android since this change; no device is connected and no live behavior is claimed.
