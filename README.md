@@ -23,6 +23,15 @@ powershell -ExecutionPolicy Bypass -File tools/last-z-helper/validate.ps1
 powershell -ExecutionPolicy Bypass -File tools/last-z-helper/build.ps1
 ```
 
+On macOS/Linux, set `JAVA_HOME`, `LASTZ_ANDROID_SDK` and put Node.js on `PATH`, then use:
+
+```sh
+python3 tools/last-z-helper/fetch_assets.py
+python3 tools/last-z-helper/validate.py
+```
+
+The portable validator builds DEX and runs the Windows suite inventory, all JavaScript guard tests, Python tests and the cross-process recovery suites. `build.py` defaults to DEX only. To package an APK, pass `--apk --keystore /private/path/to/existing-key.jks` with `LASTZ_KEYSTORE_PASSWORD` set in the environment. It never generates a replacement key or installs the app. Keep the original signer when updating an existing installation.
+
 The APK is written to `bin/last-z-helper.apk`. Installation is separate; use an explicitly selected ADB device and preserve settings, histories and the existing signing key. A fresh clone does not contain the private signing key needed to upgrade an existing installation. Build scripts retain their existing test-key behavior for new installations; do not generate a replacement key for an installed helper.
 
 Copy the Android platform tools into `scrcpy/` for the existing Windows device utilities. The transferred local checkout already contains its dependencies and private build material. None of the private runtime, signing keys, backups, device logs or APKs are published by this repository.

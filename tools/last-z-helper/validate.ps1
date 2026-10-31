@@ -92,3 +92,13 @@ if($LASTEXITCODE){throw 'Auto Boomer policy compilation failed'}
 if($LASTEXITCODE){throw 'Auto Boomer policy tests failed'}
 node "$PSScriptRoot/tests/event_carousel_guard.test.js"
 if($LASTEXITCODE){throw 'Event carousel guard tests failed'}
+
+node "$PSScriptRoot/tests/boomer_activation_guard.test.js"
+if($LASTEXITCODE){throw 'Auto Boomer native activation tests failed'}
+
+& "$jdk/bin/javac.exe" -encoding UTF-8 -cp $classes -d $testClasses "$PSScriptRoot/tests/BoomerNavigationTests.java"
+if($LASTEXITCODE){throw 'Auto Boomer navigation scope compilation failed'}
+& "$jdk/bin/java.exe" -cp "$testClasses;$classes" dev.codex.lastzhelper.BoomerNavigationTests
+if($LASTEXITCODE){throw 'Auto Boomer navigation scope tests failed'}
+node "$PSScriptRoot/tests/boomer_navigation_guard.test.js"
+if($LASTEXITCODE){throw 'Auto Boomer native navigation tests failed'}
