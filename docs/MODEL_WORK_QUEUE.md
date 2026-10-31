@@ -46,7 +46,7 @@ Steps:
 5. Ran git diff --check and link checks; no application suites or device actions were rerun.
 6. Committed directly to main and marked S1 READY. Ask for Sol6.1/high before starting S1.
 
-Evidence: commit `DOCUMENTATION_COMMIT` (replace with the published commit SHA after publication); `git diff --check` passed; edited links resolve within the repository.
+Evidence: commit `21ce6f1a3cb27ab5acd3dcacb8fe084dc4e469bf`; `git diff --check` passed; edited links resolve within the repository.
 
 Acceptance: no contradictory current-status claims; historical checkpoints preserved; no new claims of installed Boomer/full parity; no app, runtime, phone or history changes; only factual documentation/queue edits committed.
 
