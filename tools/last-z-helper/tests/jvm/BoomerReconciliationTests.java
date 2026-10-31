@@ -25,6 +25,22 @@ public final class BoomerReconciliationTests {
   changed=clone(after);changed.getJSONArray("options").getJSONObject(0).put("selected","true");expect(!BoomerReconciliationPolicy.receipt(before,changed),"String cannot replace boolean");
   JSONObject disabled=clone(before);disabled.getJSONArray("options").getJSONObject(0).put("selected",false);changed=clone(after);changed.put("options",disabled.getJSONArray("options"));expect(!BoomerReconciliationPolicy.receipt(disabled,changed),"No selected joins is not activation success");
   expect(!BoomerReconciliationPolicy.receipt(before,clone(after).put("options",new JSONArray())),"Unloaded options cannot reconcile");
+  String uid=before.getString("accountUid"),id=BoomerReceiptRecovery.ID;
+  java.io.File file=java.nio.file.Files.createTempDirectory("boomer-recovery-").resolve("state.json").toFile();
+  MaintenanceStore store=new MaintenanceStore(file);String key=store.begin(uid,id,"initial","activate",now,before);
+  final JSONObject receipt=after;
+  BoomerReceiptRecovery.World world=new BoomerReceiptRecovery.World(){public void active(){}public long now(){return 1001000;}public JSONObject read(){return receipt;}};
+  String disk=StateProbe.text(file.getPath());
+  expect(BoomerReceiptRecovery.inspect(store,uid,true,world)==1,"Preview finds exact proof");
+  expect(StateProbe.text(file.getPath()).equals(disk)&&store.unresolved(uid,id),"Preview preserves disk and in-memory barrier");
+  receipt.put("expiryMs",expiry+60000);expect(BoomerReceiptRecovery.inspect(store,uid,false,world)==0&&store.unresolved(uid,id),"Manual renewal remains fenced");receipt.put("expiryMs",expiry);
+  receipt.put("observedMs",now-20000);boolean rejected=false;try{BoomerReceiptRecovery.inspect(store,uid,false,world);}catch(java.io.IOException expected){rejected=true;}expect(rejected&&store.unresolved(uid,id),"Stale recovery snapshot rejected");receipt.put("observedMs",now+1000);
+  BoomerReceiptRecovery.World stopped=new BoomerReceiptRecovery.World(){public void active()throws Exception{throw new InterruptedException("STOP");}public long now(){return 0;}public JSONObject read(){throw new AssertionError("read after STOP");}};
+  rejected=false;try{BoomerReceiptRecovery.inspect(store,uid,false,stopped);}catch(InterruptedException expected){rejected=true;}expect(rejected&&StateProbe.text(file.getPath()).equals(disk),"STOP before recovery preserves attempt");
+  expect(BoomerReceiptRecovery.inspect(store,uid,false,world)==1,"Exact recovery records proof");
+  MaintenanceStore reloaded=new MaintenanceStore(file);expect(!reloaded.unresolved(uid,id)&&reloaded.operation(uid,key).getJSONObject("after").getBoolean("reconciledReadOnly"),"Durable receipt clears barrier");
+  expect(reloaded.feature(uid,id).getLong("nextDueMs")==expiry,"Recovery retains actual expiry");
+  disk=StateProbe.text(file.getPath());expect(BoomerReceiptRecovery.inspect(reloaded,uid,false,world)==0&&StateProbe.text(file.getPath()).equals(disk),"Repeated recovery performs no write");
   System.out.println("Auto Boomer reconciliation: "+checks+" checks passed; no replay/input");
  }
 }

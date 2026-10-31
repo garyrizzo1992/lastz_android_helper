@@ -1,5 +1,15 @@
 # Current handoff - start here
 
+## S1 checkpoint: rotation receipt recovery adapter, 2026-10-31
+
+Active model is GPT-6.1 Sol, identified by explicit session metadata. User requests larger related batches to reduce manual switches; specify model/effort at every switch and pause for confirmation. The previously saved Luna state below is historical.
+
+Added BoomerReceiptRecovery, a filesystem-backed receipt engine shared by the diagnostic and rotation adapter. It checks the bound UID and snapshot freshness, retains incomplete/mismatched/expired attempts, never cancels or replays activation, saves exact proof before clearing the barrier, and schedules the actual verified expiry. Preview preserves both disk and in-memory operation state. BoomerRecoveryNavigation holds the separate BoomerReceiptNavigation permission scope through cleanup and clears it in finally, including cleanup failure. STOP remains checked before navigation/read and cleanup.
+
+MaintenanceReconciler now recognizes Boomer recovery and invokes the adapter only with an explicit true feature flag. Missing flags and saved false opt-outs prevent navigation. Rotation's existing reconciliation-before-features and supported-receipt deferral paths can use this when enrolled; RotationPolicy.FEATURES and MaintenanceRegistry still exclude Boomer, so the installed Run bot feature set is unchanged. No phone action, install, gameplay or fresh operational-state inspection occurred; last verified bot/Python state remains stopped and installed0.39 unchanged.
+
+Full portable validation passes with 29 Boomer reconciliation checks (nine new filesystem recovery checks), 141 transaction fault checks, and all existing suites. Cases include preview preservation, stale/mismatched proof, STOP before read, durable verification, actual expiry and repeat/no-write. Private log: runtime/helper-build/s1-validation.txt. Source adapter build passed; no live rotation navigation or injected-session failure was tested in this batch. Original signing key remains a release prerequisite. Next: the grouped L2 Luna/medium packet in MODEL_WORK_QUEUE, then Sol6.1/high review before enrollment/release.
+
 ## Workflow checkpoint: L1 complete; active model Luna, Sol6.1 required for S1, 2026-10-31
 
 User now requests manual model handoffs: GPT-6.1 Sol for demanding work, GPT-6 Luna for routine batches. The user switches the model in this chat and says continue. Asking for the next model switch at a safe batch boundary is explicitly allowed; do not simulate a router with sub-agents or create another chat.

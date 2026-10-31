@@ -16,12 +16,10 @@ public final class BoomerReconcileCheck {
     if(navigate)c.activeFeature=new BoomerReceiptNavigation();JSONObject result;
     try{
     if(navigate)navigator.open();
-    JSONObject after=new BoomerReader(c).read(),operations=c.store.account(c.uid).getJSONObject("operations");int resolved=0;java.util.Iterator<String> keys=operations.keys();
-    while(keys.hasNext()){String key=keys.next();JSONObject op=operations.getJSONObject(key);if(!"boomer_auto_join".equals(op.optString("feature"))||!"activate".equals(op.optString("target"))||!(op.optString("status").equals("pending")||op.optString("status").equals("uncertain")))continue;
-     boolean proof=false;try{proof=BoomerReconciliationPolicy.receipt(op.getJSONObject("before"),after);}catch(JSONException missing){/* Old attempts without a request timestamp remain fenced. */}
-     if(proof){resolved++;if(!c.preview){after.put("reconciledReadOnly",true);c.store.verified(c.uid,key,System.currentTimeMillis(),after);}}
-    }
-    if(resolved>0&&!c.preview&&!c.store.unresolved(c.uid,"boomer_auto_join"))c.store.record(c.uid,"boomer_auto_join",new MaintenanceResult(MaintenanceResult.Outcome.NOTHING_TO_DO,"Interrupted Auto Team-Up activation verified read-only; existing expiry retained",after.getLong("nextDueMs"),java.util.Collections.singletonMap("snapshot",after.toString())),System.currentTimeMillis());
+    int resolved=BoomerReceiptRecovery.inspect(c.store,c.uid,c.preview,new BoomerReceiptRecovery.World(){
+     public void active()throws Exception{c.active();}public long now(){return System.currentTimeMillis();}
+     public JSONObject read()throws Exception{return new BoomerReader(c).read();}
+    });
     result=new JSONObject().put("event","boomer-reconciliation").put("ok",true).put("accountUid",c.uid).put("resolved",resolved).put("unresolved",c.store.unresolved(c.uid,"boomer_auto_join")).put("dryRun",c.preview).put("activationSent",false).put("navigationAllowed",navigate).put("readOnlyReceipt",true);
     }finally{if(navigate){c.active();navigator.close();}c.activeFeature=null;}
     output=result;

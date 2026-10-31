@@ -2,13 +2,13 @@
 
 User preference: GPT-6.1 Sol for demanding work and GPT-6 Luna for routine batches. The user changes the model in this chat and says **continue**. This is a saved work queue, not an automatic model router or permission to start the bot.
 
-**Active model: GPT-6 Luna (user-confirmed 2026-10-31).** Do not start S1 while Luna is active; switch to Sol6.1/high before resuming the critical receipt-recovery implementation.
+**Active model: GPT-6.1 Sol (session-identified 2026-10-31).** Update this field only from explicit session metadata or user confirmation. A bare resume does not prove a model switch. Group related implementation and checks to reduce manual switches; always specify the next model and effort and ask before changing batches.
 
 ## Current handoff
 
-**Status: L1 complete; S1 paused because the active model is Luna. Waiting for the user to switch to Sol6.1/high and say continue.**
+**Status: S1 implementation complete; L2 ready for Luna/medium after the requested manual switch.**
 
-Next batch: S1 below. Do not execute it on Luna merely to avoid waiting for a switch. No source behavior changes were made in this Luna turn. No game action or deployment is part of this batch. Helper/Python remain stopped under the user's standing instruction.
+Next batch: L2 below. Helper/Python remain stopped under the user's standing instruction. No game action or deployment is included.
 
 ## Model allocation
 
@@ -56,7 +56,7 @@ Escalate to Sol before making a behavior decision, interpreting a new validation
 
 ## S1 — next Sol batch: rotation receipt-recovery integration
 
-Status: QUEUED after L1. Suggested effort: high.
+Status: IMPLEMENTED, pending L2 evidence and Sol release review. Suggested effort: high.
 
 Read BoomerEngine, BoomerReceiptNavigation, BoomerReconcileCheck, MaintenanceRunner, MaintenanceReconciler, RotationController, RecoveryEngine and their tests.
 
@@ -66,7 +66,15 @@ Sol owns design, critical implementation, root-cause analysis and final behavior
 
 ## L2 — validation/reporting batch after S1
 
-Status: BLOCKED on Sol supplying an exact validation packet.
+Status: READY. Model: Luna, medium effort. Run this coherent validation/reporting batch, then ask for Sol6.1/high.
+
+Packet (from repository root, using the existing private toolchain):
+
+1. Read the newest handoff and verify the checkout contains the S1 receipt recovery checkpoint. Preserve any unrelated changes.
+2. Set JAVA_HOME to parent work/toolchain/jdk-17.0.21+9/Contents/Home, LASTZ_ANDROID_SDK to parent work/toolchain/sdk, and prepend JAVA_HOME/bin and parent work/toolchain/node-v22.14.0-darwin-arm64/bin to PATH. These paths are relative to the chat workspace, not this repository.
+3. Run `python3 tools/last-z-helper/validate.py`, retaining its output privately under runtime/helper-build. Expected: all portable suites pass, including 29 Boomer reconciliation, 141 transaction fault, 36 receipt permission and 16 registry checks. No APK signing or installation.
+4. If explicit serial f7c5e6fe is connected and the script's idle/root preflight passes, run `python3 tools/last-z-helper/validate_android_fixtures.py --serial f7c5e6fe`. Expected: 141 transaction and five owned-shell detach checks. This does not exercise live rotation navigation. Do not bypass preflight, clear STOP or start a controller if blocked; report the hardware-dependent check unavailable and continue documentation.
+5. Run `git diff --check`, record actual results and limitations in CURRENT_HANDOFF, update this queue and commit directly to main. Do not change source or weaken failing tests. Ask for Sol6.1/high for adapter/rotation review and release planning.
 
 Run only prescribed build/test commands against the specified commit/diff. Collect concise results, distinguish simulated/JVM/Android/installed evidence, update the handoff and queue. Do not weaken tests or alter guards to make a failure pass. A new failure returns to Sol with command, first relevant error, affected files and preserved evidence.
 

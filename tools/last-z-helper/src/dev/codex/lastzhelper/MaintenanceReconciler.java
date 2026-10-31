@@ -1,12 +1,17 @@
 package dev.codex.lastzhelper;
 import java.util.*;import org.json.*;
-/** Never navigates or inputs; unsupported/ambiguous receipts remain unresolved. */
+/** Existing receipts use getters; Boomer uses a separate navigation-only scope. */
 final class MaintenanceReconciler {
- static boolean supported(String f){return f.equals("training_collection")||f.equals("wanted_finished_reward");}
+ static boolean supported(String f){return f.equals("training_collection")||f.equals("wanted_finished_reward")||f.equals(BoomerReceiptRecovery.ID);}
  static int inspect(MaintenanceContext c,JSONObject flags)throws Exception{
-  int resolved=0;JSONObject operations=c.store.account(c.uid).getJSONObject("operations");Iterator<String> keys=operations.keys();
+  int resolved=0;
+  // Missing flag is deliberately false until production enrollment. Explicit
+  // opt-outs also prohibit recovery navigation for this feature.
+  if(flags.optBoolean(BoomerReceiptRecovery.ID,false))resolved+=BoomerRecoveryNavigation.inspect(c);
+  JSONObject operations=c.store.account(c.uid).getJSONObject("operations");Iterator<String> keys=operations.keys();
   while(keys.hasNext()){
-   String key=keys.next();JSONObject op=operations.getJSONObject(key);String feature=op.getString("feature"),status=op.getString("status");if(!supported(feature)||!flags.getBoolean(feature)||status.equals("verified")||status.equals("cancelled_before_input"))continue;
+   String key=keys.next();JSONObject op=operations.getJSONObject(key);String feature=op.getString("feature"),status=op.getString("status");if(!supported(feature)||!flags.optBoolean(feature,false)||status.equals("verified")||status.equals("cancelled_before_input"))continue;
+   if(feature.equals(BoomerReceiptRecovery.ID))continue;
    JSONObject before=op.getJSONObject("before"),after=null;
    try(GameMemory m=new GameMemory(c.controller.cache)){
     c.active();if(!c.uid.equals(m.state.getString("accountUid")))throw new java.io.IOException("Reconciliation account changed");
