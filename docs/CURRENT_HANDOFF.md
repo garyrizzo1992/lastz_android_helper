@@ -1,5 +1,16 @@
 # Current handoff - start here
 
+## Stop checkpoint after resume audit, 2026-10-31
+
+User requested **"stop at the next checkpoint"**. Work is stopped after this checkpoint; do not resume until requested. Continue committing directly to main, with regular checkpoints and no PR.
+
+- Source and origin/main were clean at f64ed08 before this documentation checkpoint. The prior Auto Boomer activation/repeat, navigation STOP, isolated receipt recovery, strict registry and validation results remain as recorded below.
+- Fresh read-only phone inspection confirmed serialf7c5e6fe connected, trucks-by-garix UID2059765822000064, PID19512/start1851923, base scene1 and modal count0. Helper requestedRunning=false. Process inspection found no native worker/injector and no old main_scrcpy Python worker. No controller or consuming game action was started during this resume audit.
+- Installed app remains the previously verified signed0.39; no installation or runtime-asset replacement occurred. Windows192.168.1.12 still timed out over SSH, so the original signing key remains unavailable on this Mac.
+- No source changes or new test results were introduced in this short resume. Full validation belongs to the preceding f64ed08 checkpoint. Private read-only evidence is in parent work/boomer-evidence/resume-stop-checkpoint-state.json; do not publish it.
+
+**Next resume:** finish Auto Boomer fault coverage at the durable attempt/input/receipt boundaries. Use isolated filesystem fixtures to test STOP before and after journaling, interruption after input, missing receipt, verified-receipt persistence and refused replay; do not turn active protection Off to create samples. Consider extracting the commit sequence behind a small testable interface while retaining the real native reader/permission adapter. That refactor was only considered and has NOT been started. Then integrate the separately restricted receipt scope into rotation recovery, complete default-enabled UI/registry enrollment after the remaining release gates, and perform a same-signer installed-path check once the original key is available. AUTO_BOOMER_NEXT.md has the complete release checklist. Other parity features remain in ANDROID_BOT_REMAINING_PLAN.md.
+
 ## Latest checkpoint: Auto Boomer activation and repeat verified on Mac, 2026-10-31
 
 **Repository/workflow:** all future updates go to https://github.com/garyrizzo1992/lastz_android_helper. User now explicitly requests **commit directly to main/master, no PR**. Initial Mac checkpoint was18a6273 on a temporary branch; subsequent checkpoints belong directly on main. Mac checkout: `work/lastz_android_helper` under the existing chat workspace. Keep regular checkpoints and work autonomously without questions while user sleeps.
