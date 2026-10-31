@@ -14,6 +14,9 @@
 *.p12
 *.exe
 *.dll
+*.download
+*.dex
+*.class
 .env
 .env.*
 .venv/
