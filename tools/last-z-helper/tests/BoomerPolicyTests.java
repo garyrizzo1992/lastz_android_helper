@@ -1,0 +1,10 @@
+package dev.codex.lastzhelper;
+public final class BoomerPolicyTests {
+ static int checks;static void expect(boolean v,String m){if(!v)throw new AssertionError(m);checks++;}
+ public static void main(String[] args){
+  expect(BoomerPolicy.seconds("Auto-Join Duration:<color=#FFFFFF>09:28:40</color>")==34120,"observed active timer");expect(BoomerPolicy.seconds("Auto-Join Duration:12:00:00")==43200,"12-hour plain timer");for(String s:new String[]{null,"","Auto-Join Duration:13:00:00","Auto-Join Duration:09:60:00","09:00:00","Auto-Join Duration:99:00:00"})expect(BoomerPolicy.seconds(s)==-1,"unknown timer rejected");
+  long now=100000,end=now+3600000;expect(BoomerPolicy.state(now,end,3600,true,true,true,"Auto Team-Up","Activate",true,true)==BoomerPolicy.State.ACTIVE,"exact active state");expect(BoomerPolicy.state(now,end,3594,true,true,true,"Auto Team-Up","Activate",true,true)==BoomerPolicy.State.BLOCKED,"timer disagreement");expect(BoomerPolicy.state(now,end,3600,true,true,true,"Other","Activate",true,true)==BoomerPolicy.State.BLOCKED,"wrong title");expect(BoomerPolicy.state(now,end,3600,true,true,true,"Auto Team-Up","Buy",true,true)==BoomerPolicy.State.BLOCKED,"paid/unknown control");expect(BoomerPolicy.state(now,end,3600,true,true,true,"Auto Team-Up","Activate",true,false)==BoomerPolicy.State.BLOCKED,"disabled control");expect(BoomerPolicy.state(now,end,3600,true,false,true,"Auto Team-Up","Activate",true,true)==BoomerPolicy.State.BLOCKED,"inconsistent active layout");
+  expect(BoomerPolicy.nextCheck(now,end)==end,"already active does not claim another 12 hours");expect(BoomerPolicy.activated(0,now+BoomerPolicy.DURATION,now,now+1000),"exact renewed expiry");expect(!BoomerPolicy.activated(end,end,now,now+1000),"unchanged expiry not success");expect(!BoomerPolicy.activated(0,now+600000,now,now+1000),"short timer not activation");expect(!BoomerPolicy.activated(0,now+BoomerPolicy.DURATION,now,now+20000),"late receipt ambiguous");
+  System.out.println("Auto Boomer policy: "+checks+" checks passed");
+ }
+}

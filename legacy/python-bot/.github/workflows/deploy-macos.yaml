@@ -1,0 +1,70 @@
+name: Deploy LastZ to macOS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Branch, tag, or commit to validate and deploy
+        required: true
+        default: main
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lastz-macos-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Validate and deploy reviewed revision
+    runs-on: [self-hosted, macOS, ARM64, automation-deploy]
+    timeout-minutes: 120
+    steps:
+      - name: Check out requested revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.revision || github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Resolve immutable revision
+        id: revision
+        shell: bash
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Verify application before stopping the running service
+        shell: bash
+        run: |
+          set -euo pipefail
+          /opt/homebrew/bin/python3.13 -m venv "$RUNNER_TEMP/lastz-verify"
+          "$RUNNER_TEMP/lastz-verify/bin/pip" install --upgrade pip
+          "$RUNNER_TEMP/lastz-verify/bin/pip" install -r requirements-test.txt
+          "$RUNNER_TEMP/lastz-verify/bin/python" -c "import main_scrcpy"
+          "$RUNNER_TEMP/lastz-verify/bin/python" -m unittest discover -s tests -v
+
+      - name: Install isolated Ansible tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          /opt/homebrew/bin/python3.13 -m venv "$RUNNER_TEMP/lastz-ansible"
+          "$RUNNER_TEMP/lastz-ansible/bin/pip" install ansible-core==2.19.3
+          "$RUNNER_TEMP/lastz-ansible/bin/ansible-galaxy" collection install \
+            -r ansible/requirements.yaml -p "$RUNNER_TEMP/ansible-collections"
+
+      - name: Deploy the verified revision locally
+        shell: bash
+        env:
+          ANSIBLE_COLLECTIONS_PATH: ${{ runner.temp }}/ansible-collections
+          LASTZ_SHA: ${{ steps.revision.outputs.sha }}
+        run: |
+          set -euo pipefail
+          # Galaxy may satisfy an exact pin from the user's installed cache.
+          # Keep that cache visible when the isolated destination was skipped.
+          export ANSIBLE_COLLECTIONS_PATH="$ANSIBLE_COLLECTIONS_PATH:$HOME/.ansible/collections"
+          "$RUNNER_TEMP/lastz-ansible/bin/ansible-playbook" \
+            -i ansible/inventory.runner.ini ansible/playbook.shared.yaml \
+            -e "lastz_branch=$LASTZ_SHA"

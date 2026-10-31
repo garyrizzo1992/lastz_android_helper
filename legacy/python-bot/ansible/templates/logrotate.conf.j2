@@ -1,0 +1,8 @@
+"{{ lastz_data_dir }}/logs/launchagent.stdout.log" "{{ lastz_data_dir }}/logs/launchagent.stderr.log" {
+    size 10M
+    rotate 7
+    compress
+    missingok
+    notifempty
+    copytruncate
+}

@@ -1,0 +1,24 @@
+# Private phone state, evidence, backups, signing material and local build products
+/runtime/
+/bin/
+/scrcpy/
+**/__pycache__/
+**/.pytest_cache/
+*.pyc
+*.apk
+*.idsig
+*.jks
+*.keystore
+*.pem
+*.key
+*.p12
+*.exe
+*.dll
+.env
+.env.*
+.venv/
+venv/
+**/.DS_Store
+**/ansible/inventory.ini
+**/ansible/vault.yaml
+**/ansible/.public-deployment/

@@ -1,0 +1,4 @@
+---
+# Copy outside version control and encrypt with ansible-vault encrypt.
+lastz_secrets:
+  AXIOM_TOKEN: replace-me

@@ -1,0 +1,54 @@
+---
+- name: Fetch the reviewed public deployment role on the controller
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Check out the pinned role source
+      ansible.builtin.git:
+        repo: https://github.com/garyrizzo1992/lastz_pub.git
+        version: ee148b39817ee73b7961f77523e2eab4606023ab
+        dest: "{{ playbook_dir }}/.public-deployment"
+        force: false
+
+- name: Deploy LastZ through the public worker role
+  hosts: macmini
+  become: false
+  vars_files:
+    - vars.yaml
+  pre_tasks:
+    - name: Require the configured production user
+      ansible.builtin.assert:
+        that: ansible_facts.user_id == lastz_user
+  tasks:
+    - name: Apply the pinned reusable deployment role
+      ansible.builtin.include_role:
+        name: "{{ playbook_dir }}/.public-deployment/deployment/ansible/roles/automation"
+      vars:
+        automation_home: "{{ lastz_home }}"
+        automation_repo_url: "{{ lastz_repo_url }}"
+        automation_revision: "{{ lastz_branch }}"
+        automation_repo_dir: "{{ lastz_repo_dir }}"
+        automation_data_dir: "{{ lastz_data_dir }}"
+        automation_label: "{{ lastz_label }}"
+        automation_plist: "{{ lastz_plist }}"
+        automation_brew_prefix: "{{ lastz_brew_prefix }}"
+        automation_python_formula: "{{ lastz_python_formula }}"
+        automation_python: "{{ lastz_python }}"
+        automation_path: "{{ lastz_path }}"
+        automation_ssh_key: "{{ lastz_ssh_key }}"
+        automation_optional_packages: [android-platform-tools, tesseract]
+        automation_requirements: requirements-runtime.txt
+        automation_launcher: "{{ lastz_repo_dir }}/scripts/run_bot.sh"
+        automation_arguments: ["{{ lastz_repo_dir }}/main_scrcpy.py"]
+        automation_environment: "{{ lastz_environment }}"
+        automation_secrets: "{{ lastz_secrets }}"
+        automation_migrations:
+          - src: "{{ lastz_data_dir }}/bot.env"
+            dest: worker.env
+          - src: "{{ lastz_legacy_repo_dir }}/.env"
+            dest: worker.env
+          - src: "{{ lastz_legacy_repo_dir }}/runtime/action_status.json"
+            dest: runtime/action_status.json
+          - src: "{{ lastz_legacy_repo_dir }}/logs/trucks_state.json"
+            dest: logs/trucks_state.json

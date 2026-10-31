@@ -1,0 +1,220 @@
+---
+- name: Prepare MacOS and deploy LastZ
+  hosts: macmini
+  become: false
+  vars_files:
+    - vars.yaml
+  environment:
+    PATH: "{{ lastz_path }}"
+
+  pre_tasks:
+    - name: Verify the deployment user and platform
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.system == 'Darwin'
+          - ansible_facts.user_id == lastz_user
+        fail_msg: Connect as the configured LastZ macOS user.
+
+    - name: Check required host files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - "{{ lastz_brew_prefix }}/bin/brew"
+        - "{{ lastz_ssh_key }}"
+      register: lastz_prerequisites
+
+    - name: Require Homebrew and the deployment SSH key
+      ansible.builtin.assert:
+        that: item.stat.exists
+        fail_msg: "Missing prerequisite: {{ item.item }}"
+      loop: "{{ lastz_prerequisites.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Verify Git is available
+      # A version probe is not a checkout operation; the git module cannot do it.
+      ansible.builtin.command: /usr/bin/git --version # noqa command-instead-of-module
+      changed_when: false
+
+    - name: Validate secret environment names
+      ansible.builtin.assert:
+        that:
+          - item is match('^[A-Z_][A-Z0-9_]*$')
+          - not item.startswith('LASTZ_') or item == 'LASTZ_DEVICE_PIN'
+        fail_msg: Use valid environment names; put deployment settings in lastz_environment.
+      loop: "{{ lastz_secrets.keys() | list }}"
+      no_log: true
+
+    - name: Verify the automatic-login GUI session exists
+      ansible.builtin.command: "launchctl print gui/{{ ansible_facts.user_uid }}"
+      changed_when: false
+
+  tasks:
+    - name: Install host tools
+      community.general.homebrew:
+        name:
+          - "{{ lastz_python_formula }}"
+          - android-platform-tools
+          - tesseract
+          - logrotate
+        state: present
+
+    - name: Create deployment directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0700"
+      loop:
+        - "{{ lastz_repo_dir | dirname }}"
+        - "{{ lastz_data_dir }}"
+        - "{{ lastz_data_dir }}/logs"
+        - "{{ lastz_data_dir }}/debug"
+        - "{{ lastz_data_dir }}/runtime"
+        - "{{ lastz_home }}/Library/LaunchAgents"
+
+    - name: Acquire deployment lock
+      ansible.builtin.command:
+        argv: [mkdir, "{{ lastz_data_dir }}/deploy.lock"]
+      changed_when: true
+
+    - name: Deploy while the bot is stopped
+      block:
+        - name: Inspect existing agent
+          ansible.builtin.command: "launchctl print gui/{{ ansible_facts.user_uid }}/{{ lastz_label }}"
+          register: lastz_existing
+          failed_when: false
+          changed_when: false
+
+        - name: Stop the registered agent before changing code or dependencies
+          ansible.builtin.command: "launchctl bootout gui/{{ ansible_facts.user_uid }}/{{ lastz_label }}"
+          when: lastz_existing.rc == 0
+          changed_when: true
+
+        - name: Find existing operational state before updating Git
+          ansible.builtin.stat:
+            path: "{{ lastz_repo_dir }}/{{ item }}"
+          loop:
+            - runtime/action_status.json
+            - logs/trucks_state.json
+            - .env
+          register: lastz_legacy
+
+        - name: Preserve existing state and environment without overwriting migrated data
+          ansible.builtin.copy:
+            src: "{{ item.stat.path }}"
+            dest: "{{ lastz_data_dir }}/{{ 'bot.env' if item.item == '.env' else item.item }}"
+            remote_src: true
+            force: false
+            mode: "0600"
+          when: item.stat.exists
+          loop: "{{ lastz_legacy.results }}"
+          loop_control:
+            label: "{{ item.item }}"
+          no_log: true
+
+        - name: Deploy the selected branch
+          ansible.builtin.git:
+            repo: "{{ lastz_repo_url }}"
+            dest: "{{ lastz_repo_dir }}"
+            version: "{{ lastz_branch }}"
+            key_file: "{{ lastz_ssh_key }}"
+            accept_newhostkey: true
+            update: true
+            force: false
+
+        - name: Create the virtual environment
+          ansible.builtin.command:
+            argv: ["{{ lastz_python }}", -m, venv, "{{ lastz_repo_dir }}/.venv"]
+            creates: "{{ lastz_repo_dir }}/.venv/bin/python"
+
+        - name: Install pinned bot dependencies
+          ansible.builtin.pip:
+            requirements: "{{ lastz_repo_dir }}/requirements-runtime.txt"
+            executable: "{{ lastz_repo_dir }}/.venv/bin/pip"
+
+        - name: Install optional vaulted environment
+          ansible.builtin.template:
+            src: bot.env.j2
+            dest: "{{ lastz_data_dir }}/bot.env"
+            mode: "0600"
+          when: lastz_secrets | length > 0
+          no_log: true
+
+        - name: Install and validate the LaunchAgent
+          ansible.builtin.template:
+            src: com.garyrizzo.lastz.plist.j2
+            dest: "{{ lastz_plist }}"
+            mode: "0644"
+            validate: /usr/bin/plutil -lint %s
+
+        - name: Install log rotation configuration
+          ansible.builtin.template:
+            src: logrotate.conf.j2
+            dest: "{{ lastz_data_dir }}/logrotate.conf"
+            mode: "0600"
+
+        - name: Install and validate the rotation agent
+          ansible.builtin.template:
+            src: logrotate.plist.j2
+            dest: "{{ lastz_home }}/Library/LaunchAgents/{{ lastz_label }}.logs.plist"
+            mode: "0644"
+            validate: /usr/bin/plutil -lint %s
+          notify: Reload log rotation
+
+        - name: Run advisory preflight against the installed revision
+          ansible.builtin.command:
+            argv: [/bin/bash, "{{ lastz_repo_dir }}/scripts/run_bot.sh", --preflight]
+          environment: "{{ lastz_environment }}"
+          register: lastz_preflight
+          changed_when: false
+          failed_when: false
+
+        - name: Report preflight results
+          ansible.builtin.debug:
+            msg: "{{ ['Preflight exit: ' ~ lastz_preflight.rc, lastz_preflight.stdout, lastz_preflight.stderr] }}"
+
+      always:
+        - name: Release deployment lock
+          ansible.builtin.command:
+            argv: [rmdir, "{{ lastz_data_dir }}/deploy.lock"]
+          changed_when: true
+
+    - name: Enable the bot agent
+      ansible.builtin.command: "launchctl enable gui/{{ ansible_facts.user_uid }}/{{ lastz_label }}"
+      changed_when: false
+
+    - name: Start the deployed bot
+      ansible.builtin.command:
+        argv: [launchctl, bootstrap, "gui/{{ ansible_facts.user_uid }}", "{{ lastz_plist }}"]
+      changed_when: true
+
+    - name: Apply rotation configuration
+      ansible.builtin.meta: flush_handlers
+
+    - name: Inspect rotation agent
+      ansible.builtin.command: "launchctl print gui/{{ ansible_facts.user_uid }}/{{ lastz_label }}.logs"
+      register: lastz_rotation
+      failed_when: false
+      changed_when: false
+
+    - name: Load rotation agent if absent
+      ansible.builtin.command:
+        argv: [launchctl, bootstrap, "gui/{{ ansible_facts.user_uid }}", "{{ lastz_home }}/Library/LaunchAgents/{{ lastz_label }}.logs.plist"]
+      when: lastz_rotation.rc != 0
+      changed_when: true
+
+    - name: Verify the bot remains registered with launchd
+      ansible.builtin.command: "launchctl print gui/{{ ansible_facts.user_uid }}/{{ lastz_label }}"
+      changed_when: false
+      # Registration is not proof of a healthy game loop; preflight is advisory.
+
+  handlers:
+    - name: Reload log rotation
+      ansible.builtin.shell: |
+        set -eu
+        if launchctl print {{ ('gui/' ~ ansible_facts.user_uid ~ '/' ~ lastz_label ~ '.logs') | quote }} >/dev/null 2>&1; then
+          launchctl bootout {{ ('gui/' ~ ansible_facts.user_uid ~ '/' ~ lastz_label ~ '.logs') | quote }}
+        fi
+        launchctl enable {{ ('gui/' ~ ansible_facts.user_uid ~ '/' ~ lastz_label ~ '.logs') | quote }}
+        launchctl bootstrap {{ ('gui/' ~ ansible_facts.user_uid) | quote }} {{ (lastz_home ~ '/Library/LaunchAgents/' ~ lastz_label ~ '.logs.plist') | quote }}
+      changed_when: true

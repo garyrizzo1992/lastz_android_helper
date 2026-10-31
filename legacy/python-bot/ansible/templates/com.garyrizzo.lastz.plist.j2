@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key><string>{{ lastz_label | e }}</string>
+    <key>ProgramArguments</key>
+    <array><string>/bin/bash</string><string>{{ lastz_repo_dir | e }}/scripts/run_bot.sh</string></array>
+    <key>WorkingDirectory</key><string>{{ lastz_repo_dir | e }}</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+{% for key, value in lastz_environment.items() %}
+        <key>{{ key | e }}</key><string>{{ value | string | e }}</string>
+{% endfor %}
+    </dict>
+    <key>RunAtLoad</key><true/>
+    <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
+    <key>ThrottleInterval</key><integer>60</integer>
+    <key>ProcessType</key><string>Background</string>
+    <key>StandardOutPath</key><string>{{ lastz_data_dir | e }}/logs/launchagent.stdout.log</string>
+    <key>StandardErrorPath</key><string>{{ lastz_data_dir | e }}/logs/launchagent.stderr.log</string>
+</dict>
+</plist>

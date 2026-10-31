@@ -1,0 +1,8 @@
+assets/injector.dat
+assets/injector-arm64.dat
+assets/input-agent.js
+assets/initial-shares.json
+build/
+*.apk
+*.idsig
+*.jks

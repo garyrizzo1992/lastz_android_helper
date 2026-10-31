@@ -1,0 +1,80 @@
+package dev.codex.lastzhelper;
+import java.time.*;import java.util.*;
+public final class MaintenanceCoreTests {
+ static int checks;static void expect(boolean value,String why){if(!value)throw new AssertionError(why);checks++;}
+ static long at(String value){return Instant.parse(value).toEpochMilli();}
+ interface Check{void run();}static void rejects(Check action){boolean failed=false;try{action.run();}catch(RuntimeException e){failed=true;}expect(failed,"Invalid input rejected");}
+ public static void main(String[] args){
+  MaintenanceSchedule.Period p=MaintenanceSchedule.daily(at("2026-10-29T02:59:59Z"),"Europe/Malta",4);expect(p.key.equals("2026-10-28"),"before04belongs previous game day");expect(p.nextResetMs==at("2026-10-29T03:00:00Z"),"next reset Malta UTC+1");
+  p=MaintenanceSchedule.daily(at("2026-10-29T03:00:00Z"),"Europe/Malta",4);expect(p.key.equals("2026-10-29"),"exact reset starts new day");expect(p.nextResetMs==at("2026-10-30T03:00:00Z"),"next reset advances one local date");
+  p=MaintenanceSchedule.daily(at("2026-03-28T03:00:00Z"),"Europe/Malta",4);expect(p.nextResetMs-at("2026-03-28T03:00:00Z")==23*3600000L,"spring reset23hours apart");
+  p=MaintenanceSchedule.daily(at("2026-10-24T02:00:00Z"),"Europe/Malta",4);expect(p.nextResetMs-at("2026-10-24T02:00:00Z")==25*3600000L,"autumn reset25hours apart");
+  expect(MaintenanceSchedule.retryAt(100,1,1000,8000)==1100,"first failure uses base retry");expect(MaintenanceSchedule.retryAt(100,4,1000,8000)==8100,"backoff grows to cap");expect(MaintenanceSchedule.retryAt(100,100,1000,8000)==8100,"backoff stays capped");
+  expect(MaintenanceSchedule.due(1000,1000,false),"due exactly at timestamp");expect(!MaintenanceSchedule.due(999,1000,false),"future cooldown prevents action");expect(!MaintenanceSchedule.due(1000,0,true),"unresolved commit blocks action");
+  rejects(()->MaintenanceSchedule.daily(0,"Europe/Malta",24));rejects(()->MaintenanceSchedule.daily(-1,"Europe/Malta",4));rejects(()->MaintenanceSchedule.daily(0,"unknown-zone",4));rejects(()->MaintenanceSchedule.retryAt(0,0,1,5));rejects(()->MaintenanceSchedule.retryAt(Long.MAX_VALUE,1,1,1));
+  expect(MaintenanceSchedule.operation("vip","2026-10-29","daily_points").equals("vip:2026-10-29:daily_points"),"stable operation key");rejects(()->MaintenanceSchedule.operation("vip","2026-10-29","a:b"));rejects(()->MaintenanceSchedule.uid("clone4"));
+  Map<String,String> evidence=new LinkedHashMap<>();evidence.put("queue","123");MaintenanceResult r=new MaintenanceResult(MaintenanceResult.Outcome.COMPLETED,"confirmed",1000,evidence);evidence.put("queue","456");expect(r.evidence.get("queue").equals("123"),"evidence snapshot immutable");rejects(()->r.evidence.put("x","y"));
+  expect(MaintenanceResult.of(MaintenanceResult.Outcome.UNCERTAIN,"receipt missing",0).uncertain(),"uncertain distinct from failed");expect(!MaintenanceResult.of(MaintenanceResult.Outcome.PREVIEW,"no commit",0).uncertain(),"preview not completion");rejects(()->MaintenanceResult.of(null,"bad",0));
+  expect(VipPolicy.countdown("17:33:55")==63235,"VIP countdown parsed from live text");expect(VipPolicy.countdown("Claim")==-1&&VipPolicy.countdown("99:59:59")==-1&&VipPolicy.countdown("00:00:00")==-1,"claim/invalid/zero text is not cooldown");
+  expect(VipPolicy.state(true,false,true,true,"17:33:55","17:33:55",false)==VipPolicy.State.COOLDOWN,"opened reward with timer confirmed");
+  expect(VipPolicy.state(false,true,true,true,"Claim",null,false)==VipPolicy.State.CLAIMABLE,"login free claim contract");
+  expect(VipPolicy.state(false,true,true,true,"0",null,true)==VipPolicy.State.CLAIMABLE,"zero-cost daily freebies contract");
+  expect(VipPolicy.state(false,true,true,true,"Activate",null,false)==VipPolicy.State.BLOCKED&&VipPolicy.state(false,true,true,true,"9999",null,true)==VipPolicy.State.BLOCKED,"activate/paid offer rejected");
+  expect(VipPolicy.state(true,true,true,true,"Claim","01:00:00",false)==VipPolicy.State.BLOCKED,"conflicting opened states rejected");
+  expect(VipPolicy.state(false,true,false,true,"Claim",null,false)==VipPolicy.State.BLOCKED,"hidden claim rejected");
+  expect(VipPolicy.state(true,false,false,false,"",null,true)==VipPolicy.State.BLOCKED,"missing cooldown is not completion");
+  expect(VipPolicy.nextDue(1000,1)==2000,"next due uses observed game countdown");
+  expect(VipPolicy.allowedControl("UIManagerInstance/windows/UIVip/View/box_btn")&&!VipPolicy.allowedControl("UIManagerInstance/windows/UIVip/View/get_btn")&&!VipPolicy.allowedControl("UIManagerInstance/windows/UIVip/View/gift_btn"),"VIP input allowlist excludes activation/purchases");
+  expect(VipPolicy.period(100,0,123).equals("first_123"),"first claim eligibility identity");expect(VipPolicy.period(10000,10000,123).equals("after_10000"),"new claim identity follows actual cooldown");rejects(()->VipPolicy.period(0,10000,123));expect(!VipPolicy.period(10000,10000,123).equals(VipPolicy.period(20000,20000,123)),"unchanged VIP cache revision does not block later verified periods");
+  expect(AllianceHelpPolicy.eligible(12,true,true,"Help All"),"free Help All eligible");
+  expect(!AllianceHelpPolicy.eligible(0,true,true,"Help All")&&!AllianceHelpPolicy.eligible(12,false,true,"Help All")&&!AllianceHelpPolicy.eligible(12,true,false,"Help All")&&!AllianceHelpPolicy.eligible(12,true,true,"Activate"),"empty hidden disabled activation rejected");
+  expect(AllianceHelpPolicy.verified(12,0,280,400,0),"count decrease plus points verifies help");
+  expect(AllianceHelpPolicy.verified(12,0,1000,1000,12),"handled receipt can verify at credit cap");
+  expect(!AllianceHelpPolicy.verified(12,12,280,400,0)&&!AllianceHelpPolicy.verified(12,0,280,280,0),"points alone or disappearing requests alone not receipt");
+  expect(!AllianceHelpPolicy.allowed(AllianceHelpPolicy.VIEW+"help_btn",true)&&AllianceHelpPolicy.allowed(AllianceHelpPolicy.VIEW+"help_btn",false),"preview cannot help");
+  expect(!AllianceHelpPolicy.allowed(AllianceHelpPolicy.VIEW+"notActivatedBtn",false)&&!AllianceMenu.requestAllowed("alliance_help",4,"Alliance Gifts"),"activation and gifts outside help scope");
+  expect(AllianceGiftPolicy.rewardType(1)==2&&AllianceGiftPolicy.rewardType(2)==1,"observed Common/Rare reward mapping");
+  rejects(()->AllianceGiftPolicy.rewardType(3));
+  expect(AllianceGiftPolicy.claimable(148,true,true,"Claim All",false,true),"free gift bulk claim eligible");
+  expect(!AllianceGiftPolicy.claimable(0,true,true,"Claim All",false,true)&&!AllianceGiftPolicy.claimable(1,true,true,"Claim All",true,true)&&!AllianceGiftPolicy.claimable(1,true,true,"Buy",false,true),"empty busy paid gift controls rejected");
+  expect(AllianceGiftPolicy.received(0,1,100)&&!AllianceGiftPolicy.received(0,0,100)&&!AllianceGiftPolicy.received(0,1,0),"gift receipt requires received state and time");
+  expect(!AllianceGiftPolicy.allowed(AllianceGiftPolicy.VIEW+"get_all_btn",true)&&AllianceGiftPolicy.allowed(AllianceGiftPolicy.VIEW+"get_all_btn",false),"gift preview cannot claim");
+  expect(!AllianceGiftPolicy.allowed(AllianceGiftPolicy.VIEW+"del_all_btn",false)&&!AllianceGiftPolicy.allowed(AllianceGiftPolicy.VIEW+"libao_info",false)&&!AllianceGiftPolicy.allowed(AllianceGiftPolicy.VIEW+"set_toggle",false),"delete level chest and preferences excluded");
+  expect(MailPolicy.type(4)==1&&MailPolicy.name(4).equals("System")&&MailPolicy.type(1)==10,"Mail UI index differs from selected type");
+  rejects(()->MailPolicy.type(0));rejects(()->MailPolicy.type(7));
+  expect(MailPolicy.ordinaryCandidate(true,0,0,200,100),"ordinary unclaimed unexpired attachment candidate");
+  expect(!MailPolicy.ordinaryCandidate(true,0,100,200,100)&&!MailPolicy.ordinaryCandidate(true,1,0,200,100)&&!MailPolicy.ordinaryCandidate(true,0,0,100,100),"special deal claimed and expired mail excluded");
+  expect(MailPolicy.inspectionControl(MailPolicy.VIEW+"_toggles/#4")&&!MailPolicy.inspectionControl(MailPolicy.VIEW+"_btnAllRead")&&!MailPolicy.inspectionControl(MailPolicy.VIEW+"_btnBatchDelete"),"Mail inspection cannot claim mark read or delete");
+  expect(MailPolicy.placeholder("00000000-0000-3-0000-000000000000","",1000,false,1,0),"observed synthetic Report header skipped");
+  expect(!MailPolicy.placeholder("00000000-0000-3-0000-000000000000","",1000,true,1,0)&&!MailPolicy.placeholder("123","",1000,false,1,0)&&!MailPolicy.placeholder("00000000-0000-3-0000-000000000000","999",1000,false,1,0),"synthetic exception cannot hide rewards ordinary IDs or other recipients");
+  expect(ChestPolicy.inspect(ChestPolicy.CAP_MS+1,1,"08:00:00",true).equals("FULL_INSPECTION_ONLY"),"full chest is inspection only, not permission to claim");
+  expect(ChestPolicy.inspect(ChestPolicy.CAP_MS,1,"08:00:00",true).equals("BLOCKED"),"full label before accumulation cap rejected");
+  expect(ChestPolicy.inspect(10,11,"08:00:00",true).equals("BLOCKED")&&ChestPolicy.inspect(10,0,"08:00:00",true).equals("BLOCKED"),"future or absent chest timestamp blocked");
+  expect(ChestPolicy.inspect(ChestPolicy.CAP_MS+1,1,"08:00:00",false).equals("BLOCKED"),"unverified collider blocked");
+  expect(ChestPolicy.inspect(100,1,"00:00:01",true).equals("NOT_FULL_OR_UNRECOGNIZED"),"partial chest not full");
+  expect(ChestPolicy.period(123).equals("since_123"),"candidate chest period uses game timestamp");rejects(()->ChestPolicy.period(0));
+  expect(ChestPolicy.claimable(ChestPolicy.CAP_MS+1,1,"Idle Reward","08:00:00 (MAX)","Collect",true,true,8),"observed full free chest claim contract");
+  expect(!ChestPolicy.claimable(ChestPolicy.CAP_MS+1,1,"Idle Reward","08:00:00 (MAX)","Buy",true,true,8)&&!ChestPolicy.claimable(ChestPolicy.CAP_MS+1,1,"Idle Reward","08:00:00 (MAX)","Collect",true,false,8)&&!ChestPolicy.claimable(ChestPolicy.CAP_MS+1,1,"Idle Reward","08:00:00 (MAX)","Collect",true,true,0),"paid disabled empty reward offers excluded");
+  expect(ChestPolicy.seconds("00:00:00")==0&&ChestPolicy.seconds("08:00:00")==28800&&ChestPolicy.seconds("08:00:01")==-1,"chest duration bounds");
+  expect(ChestPolicy.partial(11000,1000,"00:00:10")&&!ChestPolicy.partial(ChestPolicy.CAP_MS+1,1,"00:00:10")&&!ChestPolicy.partial(11000,1000,"garbage"),"partial accumulation evidence not arbitrary text");
+  expect(!TrainingPolicy.supported(3)&&!TrainingPolicy.supported(34),"hospital and upgrades excluded from troop collection");
+  expect(TrainingPolicy.item(9,"107207;145;0").count==145,"observed Bow payload parsed");rejects(()->TrainingPolicy.item(9,"107007;145;0"));rejects(()->TrainingPolicy.item(9,"107207;0;0"));rejects(()->TrainingPolicy.item(9,"107207;145;1"));
+  expect(TrainingPolicy.classify(9,3,100,10,90,425000,true,false,145,145,true).equals("READY_TO_COLLECT"),"finished linked Bow queue candidate");
+  expect(TrainingPolicy.classify(3,3,100,10,90,411000,true,false,145,145,true).equals("EXCLUDED"),"finished hospital never collected as troops");
+  expect(TrainingPolicy.classify(9,3,100,10,110,425000,true,false,145,145,true).equals("BLOCKED")&&TrainingPolicy.classify(9,3,100,10,90,425000,true,false,144,145,true).equals("BLOCKED")&&TrainingPolicy.classify(9,3,100,10,90,425000,true,false,145,145,false).equals("BLOCKED"),"future end inventory mismatch and stale bubble blocked");
+  expect(TrainingPolicy.classify(9,2,100,10,90,425000,true,false,145,145,true).equals("WAITING"),"expired timer alone does not override game Work state");
+  expect(TrainingPolicy.classify(9,0,100,0,0,425000,true,false,0,0,false).equals("NOTHING_TO_DO"),"free empty training queue has no work");
+  expect(TrainingPolicy.collected(0,56,201,145,0,145),"free queue plus145freegain/trainingdrop receipt");
+  expect(!TrainingPolicy.collected(3,56,201,145,0,145)&&!TrainingPolicy.collected(0,56,200,145,0,145)&&!TrainingPolicy.collected(0,56,201,145,1,145),"queue or either inventory mismatch rejects collection receipt");
+  expect(WantedPolicy.classify(1430459261720215782L,0,10,90,100,false,"",0).equals("READY_INSPECTION_ONLY"),"completed own Wanted reward is inspection only");
+  expect(WantedPolicy.classify(1,1,10,90,100,false,"",0).equals("ALREADY_RECEIVED"),"claimed Wanted reward is not repeated");
+  expect(WantedPolicy.classify(1,0,10,110,100,false,"",0).equals("WAITING"),"running Wanted reward not claimed");
+  expect(WantedPolicy.classify(0,0,0,0,100,true,"",0).equals("EXCLUDED"),"observed steal/GO placeholder excluded");
+  expect(WantedPolicy.classify(1,0,10,90,100,false,"other",0).equals("EXCLUDED")&&WantedPolicy.classify(1,0,10,90,100,false,"",5).equals("EXCLUDED"),"other owner and world objective excluded");
+  expect(WantedPolicy.classify(0,0,10,90,100,false,"",0).equals("BLOCKED")&&WantedPolicy.classify(1,2,10,90,100,false,"",0).equals("BLOCKED")&&WantedPolicy.classify(1,0,10,0,100,false,"",0).equals("BLOCKED"),"invalid Wanted identity state and timer blocked");
+  WantedClaimCheckFeature wantedCheck=new WantedClaimCheckFeature();
+  expect(wantedCheck.permitsInput("ui-tap",WantedPolicy.PANEL+"/cellList/#1/receive_btn",false)&&!wantedCheck.permitsInput("ui-tap",WantedPolicy.PANEL+"/cellList/#1/go_btn",false),"Wanted claim capability excludes GO");
+  expect(!wantedCheck.permitsInput("ui-tap",WantedPolicy.PANEL+"/refresh_btn",false)&&!wantedCheck.permitsInput("ui-tap",WantedPolicy.PANEL+"/cellList/#1/receive_btn",true),"Wanted claim cannot refresh or consume in preview");
+  System.out.println("Passed "+checks+" maintenance core checks");
+ }
+}

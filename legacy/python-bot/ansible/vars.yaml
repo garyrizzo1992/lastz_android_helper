@@ -1,0 +1,29 @@
+---
+lastz_user: garyrizzo
+lastz_home: "/Users/{{ lastz_user }}"
+# LaunchAgents do not reliably receive macOS Files & Folders access to ~/Documents.
+# Keep executable source outside protected user folders; persistent state is external.
+lastz_repo_dir: "{{ lastz_home }}/Applications/lastz"
+lastz_legacy_repo_dir: "{{ lastz_home }}/Documents/lastz"
+lastz_data_dir: "{{ lastz_home }}/Library/Application Support/LastZ"
+lastz_label: com.garyrizzo.lastz
+lastz_plist: "{{ lastz_home }}/Library/LaunchAgents/{{ lastz_label }}.plist"
+lastz_repo_url: git@github.com:garyrizzo1992/lastz.git
+lastz_branch: main
+lastz_ssh_key: "{{ lastz_home }}/.ssh/id_ed25519"
+lastz_brew_prefix: /opt/homebrew
+lastz_python_formula: python@3.13
+lastz_python: "{{ lastz_brew_prefix }}/opt/{{ lastz_python_formula }}/bin/python3.13"
+lastz_path: "{{ lastz_brew_prefix }}/bin:{{ lastz_brew_prefix }}/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+# Supply with -e @vault.yaml (encrypted with ansible-vault).
+# An empty dictionary preserves any existing environment file.
+lastz_secrets: {}
+lastz_environment:
+  PATH: "{{ lastz_path }}"
+  LASTZ_DATA_DIR: "{{ lastz_data_dir }}"
+  LASTZ_ENV_FILE: "{{ lastz_data_dir }}/bot.env"
+  LASTZ_PYTHON: "{{ lastz_repo_dir }}/.venv/bin/python"
+  LASTZ_GIT_BRANCH: "{{ lastz_branch }}"
+  LASTZ_RETRY_ON_FAILURE: "true"
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"

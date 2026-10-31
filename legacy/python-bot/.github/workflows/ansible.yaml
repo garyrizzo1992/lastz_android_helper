@@ -1,0 +1,32 @@
+name: Validate macOS deployment
+on:
+  push:
+    paths: ['ansible/**', 'scripts/run_bot.sh', 'requirements-runtime.txt', '.github/workflows/ansible.yaml']
+  pull_request:
+    paths: ['ansible/**', 'scripts/run_bot.sh', 'requirements-runtime.txt', '.github/workflows/ansible.yaml']
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install ansible-core==2.19.3 ansible-lint==25.9.2
+      - run: ansible-galaxy collection install -r ansible/requirements.yaml
+      - run: ansible-playbook -i ansible/inventory.example.ini ansible/playbook.yaml --syntax-check
+      - run: ansible-lint ansible/playbook.yaml
+      - run: bash -n scripts/run_bot.sh
+      - run: python -m unittest discover -s tests -p test_ansible_templates.py
+      - run: python -m unittest discover -s tests -p test_launcher.py
+  mac-dependencies:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: pip install -r requirements-runtime.txt
+      - run: python -c "import main_scrcpy"
