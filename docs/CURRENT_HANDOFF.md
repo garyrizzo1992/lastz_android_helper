@@ -1,5 +1,13 @@
 # Current handoff - start here
 
+## Sol review checkpoint: atomic receipt/status recovery, 2026-10-31
+
+Active model: GPT-6.1 Sol (session metadata). Review found a crash window between persisting a recovered Boomer operation and clearing the feature's previous UNCERTAIN result. Added MaintenanceStore.verifiedResult to persist the receipt and, when no other operation remains unresolved, feature outcome/actual expiry in one atomic replacement. BoomerReceiptRecovery uses this path. Store is package-private and extensible for injected save-failure tests; production persistence remains ShareLedger.atomic. Four added checks cover failed save/durable barrier, restart, one-save completion and recovered scheduling. Portable validation is recorded in runtime/helper-build/s2-review-validation.txt; the expected Boomer reconciliation total is now33. The initial test compile caught the store's final modifier; the fixture extension was corrected before rerunning validation.
+
+Release decision: keep Boomer outside RotationPolicy.FEATURES, MaintenanceRegistry and default UI until adapter/rotation and same-signer installed tests are complete. Fresh adb devices still shows no phone. Original signing key remains unavailable on this Mac. No game input, install, service restart or operational-history mutation occurred; last known bot/Python state remains stopped. Future adapter validation must cover STOP during navigation, cleanup failure, UID/focus change, inconclusive receipts and continuing independent work only after clear UI and detach are established. Successful diagnostic receipts alone do not complete these rotation gates.
+
+Full portable validation passed: 33 Boomer reconciliation, 141 transaction faults, 36 receipt permissions, 16 registry checks and all existing suites, including35Python tests. git diff --check passed. Keep Sol6.1/high selected for the next dependent integration/release work; no model switch is needed for another identical suite run. Reconnect the selected phone for hardware evidence and make the original signing material available before signed deployment.
+
 ## L2 checkpoint: portable validation complete; Android fixture unavailable, 2026-10-31
 
 Active model is GPT-6 Luna at medium effort, confirmed by the user. The grouped L2 packet ran against commit 02e9882. Portable validation passed: 29 Boomer reconciliation checks, 141 durable transaction checks, 36 receipt-permission checks, 16 registry checks, all recovery/ownership suites and 35 Python tests. `git diff --check` passed. The private log is runtime/helper-build/l2-validation.txt.

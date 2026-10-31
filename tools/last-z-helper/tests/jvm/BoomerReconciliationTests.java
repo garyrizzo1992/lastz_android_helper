@@ -3,6 +3,10 @@ import org.json.*;
 public final class BoomerReconciliationTests {
  static int checks;static void expect(boolean value,String why){if(!value)throw new AssertionError(why);checks++;}
  static JSONObject clone(JSONObject value)throws Exception{return new JSONObject(value.toString());}
+ static final class FaultStore extends MaintenanceStore {
+  boolean fail;int saves;FaultStore(java.io.File file)throws Exception{super(file);}
+  void save()throws Exception{saves++;if(fail)throw new java.io.IOException("Injected atomic save failure");super.save();}
+ }
  public static void main(String[]args)throws Exception{
   long now=1000000,expiry=now+BoomerPolicy.DURATION;
   JSONArray options=new JSONArray().put(new JSONObject().put("type",1).put("selected",true)).put(new JSONObject().put("type",2).put("selected",false));
@@ -41,6 +45,14 @@ public final class BoomerReconciliationTests {
   MaintenanceStore reloaded=new MaintenanceStore(file);expect(!reloaded.unresolved(uid,id)&&reloaded.operation(uid,key).getJSONObject("after").getBoolean("reconciledReadOnly"),"Durable receipt clears barrier");
   expect(reloaded.feature(uid,id).getLong("nextDueMs")==expiry,"Recovery retains actual expiry");
   disk=StateProbe.text(file.getPath());expect(BoomerReceiptRecovery.inspect(reloaded,uid,false,world)==0&&StateProbe.text(file.getPath()).equals(disk),"Repeated recovery performs no write");
+  java.io.File faultFile=java.nio.file.Files.createTempDirectory("boomer-recovery-fault-").resolve("state.json").toFile();FaultStore fault=new FaultStore(faultFile);
+  fault.begin(uid,id,"initial","activate",now,before);fault.record(uid,id,MaintenanceResult.of(MaintenanceResult.Outcome.UNCERTAIN,"interrupted",0),now);
+  disk=StateProbe.text(faultFile.getPath());fault.fail=true;rejected=false;
+  try{BoomerReceiptRecovery.inspect(fault,uid,false,world);}catch(java.io.IOException expected){rejected=true;}
+  expect(rejected&&StateProbe.text(faultFile.getPath()).equals(disk),"Failed replacement preserves durable pending receipt and UNCERTAIN status");
+  fault=new FaultStore(faultFile);expect(fault.unresolved(uid,id),"Restart after save failure remains fenced");
+  expect(BoomerReceiptRecovery.inspect(fault,uid,false,world)==1&&fault.saves==1,"Receipt and schedule use one atomic save");
+  reloaded=new MaintenanceStore(faultFile);expect(!reloaded.unresolved(uid,id)&&reloaded.feature(uid,id).getString("lastOutcome").equals("NOTHING_TO_DO")&&reloaded.feature(uid,id).getLong("nextDueMs")==expiry,"Restart sees both receipt and recovered expiry together");
   System.out.println("Auto Boomer reconciliation: "+checks+" checks passed; no replay/input");
  }
 }

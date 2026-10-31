@@ -13,9 +13,8 @@ final class BoomerReceiptRecovery {
    String key=keys.next();JSONObject op=operations.getJSONObject(key);
    if(!ID.equals(op.optString("feature"))||!"activate".equals(op.optString("target"))||!("pending".equals(op.optString("status"))||"uncertain".equals(op.optString("status"))))continue;
    boolean proof=false;try{proof=BoomerReconciliationPolicy.receipt(op.getJSONObject("before"),after);}catch(JSONException missing){/* Legacy incomplete attempts remain fenced. */}
-   if(proof){if(!preview)store.verified(uid,key,now,new JSONObject(after.toString()).put("reconciledReadOnly",true));resolved++;}
+   if(proof){if(!preview)store.verifiedResult(uid,key,ID,now,new JSONObject(after.toString()).put("reconciledReadOnly",true),new MaintenanceResult(MaintenanceResult.Outcome.NOTHING_TO_DO,"Interrupted Auto Team-Up activation verified read-only; existing expiry retained",after.getLong("expiryMs"),Collections.singletonMap("snapshot",after.toString())));resolved++;}
   }
-  if(resolved>0&&!preview&&!store.unresolved(uid,ID))store.record(uid,ID,new MaintenanceResult(MaintenanceResult.Outcome.NOTHING_TO_DO,"Interrupted Auto Team-Up activation verified read-only; existing expiry retained",after.getLong("expiryMs"),Collections.singletonMap("snapshot",after.toString())),now);
   return resolved;
  }
 }

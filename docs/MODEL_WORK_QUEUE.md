@@ -2,11 +2,11 @@
 
 User preference: GPT-6.1 Sol for demanding work and GPT-6 Luna for routine batches. The user changes the model in this chat and says **continue**. This is a saved work queue, not an automatic model router or permission to start the bot.
 
-**Active model: GPT-6 Luna, medium effort (user-confirmed 2026-10-31).** Update this field only from explicit session metadata or user confirmation. Group related implementation and checks to reduce manual switches; always specify the next model and effort and ask before changing batches.
+**Active model: GPT-6.1 Sol (session metadata, 2026-10-31).** Keep high reasoning selected for dependent integration/release work. Group related implementation and checks to reduce manual switches; always specify the next model and effort and ask before changing batches.
 
 ## Current handoff
 
-**Status: L2 complete; waiting for Sol6.1/high review.**
+**Status: Sol review fixed atomic recovery persistence; hardware/release gates remain pending. Keep Sol6.1/high.**
 
 Next batch: S2 below. Helper/Python remain stopped under the user's standing instruction. No game action or deployment is included.
 
@@ -84,7 +84,7 @@ Android fixtures require the explicitly selected rooted device and idle controll
 
 ## S2 — review, enrollment and signed release
 
-Status: READY for Sol review; deployment remains blocked on original signing key and installed-path evidence.
+Status: REVIEWED with atomic receipt/status fix; further integration evidence requires the phone, and deployment requires the original signer. Keep Sol6.1/high for the next dependent work. Current checks: 33 Boomer reconciliation expected, plus existing suites. Do not rerun unchanged validation solely for a model switch. No Luna batch is pending now.
 
 Sol reviews results, implements/reviews explicit registry mapping, scheduling and the matching default-enabled UI choice while preserving false opt-outs. Complete same-signer candidate/installed Run/Preview/STOP checks within authorized selected-account bounds. Never generate a replacement key, uninstall to bypass signing, clear ambiguous history or turn protection Off to manufacture samples. Do not confuse source/fixture proof with installed-path completion.
 

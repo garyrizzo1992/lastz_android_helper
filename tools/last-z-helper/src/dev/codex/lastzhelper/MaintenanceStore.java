@@ -1,7 +1,7 @@
 package dev.codex.lastzhelper;
 import java.io.*;import org.json.*;
 /** Independent per-UID maintenance state. Existing game/share ledgers are untouched. */
-final class MaintenanceStore {
+class MaintenanceStore {
  final File file;final JSONObject data;
  MaintenanceStore(File file)throws Exception{
   this.file=file;data=file.exists()?new JSONObject(StateProbe.text(file.getPath())):new JSONObject().put("schema",1).put("accounts",new JSONObject());
@@ -23,8 +23,18 @@ final class MaintenanceStore {
   ops.put(key,new JSONObject().put("feature",feature).put("period",period).put("target",target).put("status","pending").put("attemptMs",nowMs).put("before",new JSONObject(before.toString())));save();return key;
  }
  void verified(String uid,String key,long nowMs,JSONObject after)throws Exception{
+  verifiedFields(uid,key,nowMs,after);save();
+ }
+ private void verifiedFields(String uid,String key,long nowMs,JSONObject after)throws Exception{
   JSONObject op=operation(uid,key);if(op==null||"verified".equals(op.optString("status")))throw new IOException("No unresolved maintenance operation");
-  op.put("status","verified").put("verifiedMs",nowMs).put("after",new JSONObject(after.toString()));save();
+  op.put("status","verified").put("verifiedMs",nowMs).put("after",new JSONObject(after.toString()));
+ }
+ /** Commit receipt and feature scheduling in the same atomic file replacement. */
+ void verifiedResult(String uid,String key,String feature,long nowMs,JSONObject after,MaintenanceResult result)throws Exception{
+  JSONObject op=operation(uid,key);if(op==null||!feature.equals(op.getString("feature")))throw new IOException("Receipt feature changed");
+  verifiedFields(uid,key,nowMs,after);
+  if(!unresolved(uid,feature))recordFields(uid,feature,result,nowMs);
+  save();
  }
  void cancelBeforeInput(String uid,String key,JSONObject proof)throws Exception{
   JSONObject op=operation(uid,key);if(op==null||!(op.optString("status").equals("pending")||op.optString("status").equals("uncertain")))throw new IOException("No unresolved attempt to cancel");
@@ -34,9 +44,11 @@ final class MaintenanceStore {
  void uncertain(String uid,String key,String reason)throws Exception{JSONObject op=operation(uid,key);if(op==null||"verified".equals(op.optString("status")))throw new IOException("No unresolved maintenance operation");op.put("status","uncertain").put("reason",reason);save();}
  void record(String uid,String feature,MaintenanceResult result,long nowMs)throws Exception{
   if(result.outcome==MaintenanceResult.Outcome.PREVIEW)return;
+  recordFields(uid,feature,result,nowMs);save();
+ }
+ private void recordFields(String uid,String feature,MaintenanceResult result,long nowMs)throws Exception{
   JSONObject f=feature(uid,feature);f.put("lastOutcome",result.outcome.name()).put("reason",result.reason).put("lastAttemptMs",nowMs).put("nextDueMs",result.nextDueMs).put("evidence",new JSONObject(result.evidence));
   if(result.outcome==MaintenanceResult.Outcome.COMPLETED){f.put("lastSuccessMs",nowMs).put("failures",0);}else if(result.outcome==MaintenanceResult.Outcome.FAILED)f.put("failures",f.getInt("failures")+1);
-  save();
  }
  boolean due(String uid,String feature,long nowMs)throws Exception{JSONObject f=feature(uid,feature);return MaintenanceSchedule.due(nowMs,f.getLong("nextDueMs"),unresolved(uid,feature)||"UNCERTAIN".equals(f.optString("lastOutcome")));}
  void save()throws Exception{ShareLedger.atomic(file,data);}
